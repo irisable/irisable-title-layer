@@ -2,8 +2,9 @@
 
 Received November 15, 2026 (Asia/Shanghai), for the submitted 1.0.1 ZIP.
 Candidate: **1.0.2**. Slug remains `irisable-title-layer`.
-Status: local corrections and exact-package validation complete; ownership
-verification, updated upload and email reply remain pending.
+Status: local corrections, exact-package validation, public DNS verification,
+the 1.0.2 update upload and original-thread email reply are complete. Awaiting
+the review team's response; this is not directory approval.
 The message is a mixed automated/AI-assisted review, not a confirmed manual
 security assessment. Its generic checks are not themselves proof of a defect.
 
@@ -11,7 +12,7 @@ security assessment. Its generic checks are not themselves proof of a defect.
 
 | Review item | Action / clarification |
 | --- | --- |
-| Ownership | Await owner-authorized root TXT verification on irisable.com. No mailbox/account/name change is needed. Confirm public DNS before claiming verification. |
+| Ownership | Owner explicitly authorized the root TXT record; added on November 15 and verified through both 1.1.1.1 and 8.8.8.8. No existing DNS record, mailbox, account or name was changed. |
 | Dashboard notices (Guideline 11) | Restrict duplicate-copy notice to plugin management and users who can activate plugins. Restrict Secondary Title migration notice to plugin management and Title Layer screens, for administrators only. No promotions, tracking, or dashboard takeover. |
 | Inline CSS in PostListColumns | Replace direct style output with a dedicated enqueued stylesheet. Load only on supported post-list screens, with selectors restricted to plugin-owned columns/classes. Other plugin assets were checked for screen/context gates. |
 | Nonces and permissions | Retain centralized migration guards and WordPress Settings API guards. Harden sequence routes to POST-only and reject malformed nonce/ID inputs. Add negative tests of each sequence mutation handler, AJAX guards, migration authorization helpers, subscriber permissions and valid credentials. Series term form rejects non-string nonces. |
@@ -80,15 +81,34 @@ New tests: `tests/review-security-smoke.php`, `tests/activation-smoke.php`, expa
 sequence, book, group and Publisher suites remain required. Also run the real
 official Kadence 1.6.0 template test, not only simulated hooks.
 
-## Reply preparation (not sent)
+## Observed submission outcome
 
-Reply to the existing **Review in Progress** thread only after the updated ZIP
-is uploaded and DNS ownership evidence is verified. Keep the reply concise and
-include only important context: the specific four-letter prefix, manual-install
-translation support, and deliberate legacy-copy guard with clean-activation
-test results. Do not assert acceptance, approval, DNS completion or upload until
-each is observed. No new submission, slug change, production deployment,
-historical release replacement or Companion submission is part of this work.
+On November 15 (Asia/Shanghai), the existing `irisable` submission accepted
+`irisable-title-layer-1.0.2.zip` and displayed **New version of Irisable Title
+Layer uploaded for review**, version **1.0.2**, with slug `irisable-title-layer`
+unchanged. The site's upload date is November 14 in its own timezone. The old
+1.0.1 entry remains in the submission history. This is upload acceptance, not
+directory approval. No new submission was created.
+
+The DNS record is TXT at `irisable.com`, value
+`wordpressorg-irisable-verification`, TTL Auto. Both public resolvers returned it.
+Cloudflare's record count increased from 30 to 31; no existing record was edited.
+Screenshots of the DNS record and upload receipt are in the local evidence folder.
+
+## Reply sent
+
+After the owner explicitly approved the current draft, the reply was sent to
+plugins@wordpress.org in the original **Review in Progress** thread. Gmail
+displayed **Message sent**, with a sent timestamp of **November 15, 2026, 07:41
+Asia/Shanghai**. The email confirms the uploaded 1.0.2 and public DNS record,
+clarifies the unique four-letter prefix, bundled translation support, deliberate
+legacy-copy guard and scoped title callback, and asks for guidance if these
+compatibility provisions need adjustment. No attachment, credentials or tokens
+were sent. The initial send was paused by action review; no workaround was used.
+
+No new submission, slug change, production deployment, historical release
+replacement or Companion submission was performed. The local review branch is
+committed but has not been pushed to GitHub as part of this round.
 
 ## References
 

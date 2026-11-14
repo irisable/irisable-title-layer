@@ -2,12 +2,14 @@
 
 Updated: 2026-11-15. Candidate: 1.0.2. Directory account: `irisable`.
 
-## Current outcome: first-round review received; response in preparation
+## Current outcome: 1.0.2 uploaded and review reply sent
 
 The November 15 email is **Review in Progress**, including automated/AI-assisted
 findings and an ownership-verification request. It is not approval or a final
-rejection. Candidate 1.0.2 addresses the review; upload and email reply remain
-pending until validation and ownership verification are complete. See the
+rejection. Candidate 1.0.2 passed validation and was uploaded on November 15.
+Owner-authorized DNS verification is publicly visible; the owner-approved reply
+was sent in the original thread on November 15 at 07:41 Asia/Shanghai. Awaiting
+the review team's response, not approved for directory publication. See the
 [item-by-item review record](wordpress-org-review-2026-11-15.md).
 
 ## Historical submission receipt (November 11)
