@@ -803,17 +803,31 @@ final class SequenceManager {
 	}
 
 	private static function verify_action( string $action, int $term_id ): void {
+		self::require_post();
 		if ( ! current_user_can( self::capability() ) ) {
 			wp_die( esc_html__( 'You are not allowed to manage Series sequences.', 'irisable-title-layer' ) );
+		}
+		if ( ! isset( $_POST['_wpnonce'] ) || ! is_string( $_POST['_wpnonce'] ) ) {
+			wp_die( -1, '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( $action . '_' . $term_id );
 	}
 
 	private static function verify_ajax( int $term_id ): void {
+		self::require_post();
 		if ( ! current_user_can( self::capability() ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not allowed to manage Series sequences.', 'irisable-title-layer' ) ), 403 );
 		}
+		if ( ! isset( $_POST['nonce'] ) || ! is_string( $_POST['nonce'] ) ) {
+			wp_send_json_error( array( 'code' => 'wptl_sequence_invalid_nonce' ), 403 );
+		}
 		check_ajax_referer( 'wptl_sequence_move_' . $term_id, 'nonce' );
+	}
+
+	private static function require_post(): void {
+		if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || ! is_string( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) ) {
+			wp_die( -1, '', array( 'response' => 405 ) );
+		}
 	}
 
 	/** @param array<string,mixed>|true|\WP_Error $result */
@@ -871,7 +885,7 @@ final class SequenceManager {
 
 	private static function request_int( string $key, bool $post = false ): int {
 		$source = $post ? $_POST : $_GET;
-		return isset( $source[ $key ] ) ? absint( wp_unslash( $source[ $key ] ) ) : 0;
+		return isset( $source[ $key ] ) && is_scalar( $source[ $key ] ) ? absint( wp_unslash( $source[ $key ] ) ) : 0;
 	}
 
 	private static function request_key( string $key, bool $post = false ): string {

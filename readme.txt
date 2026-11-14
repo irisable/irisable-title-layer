@@ -4,7 +4,7 @@ Tags: title, subtitle, series, editorial, gutenberg
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -424,6 +424,13 @@ Official Kadence 1.5.2 templates pass 40 adapter checks. Official Rank Math
 two-post cache isolation and its real taxonomy/sitemap settings.
 
 == Changelog ==
+
+= 1.0.2 =
+* Enqueue post-list styles only on supported post lists instead of printing inline style tags.
+* Limit compatibility notices to plugin-management and relevant Title Layer screens.
+* Scope the Kadence title filter to the heading render and apply explicit output allow-lists.
+* Harden sequence request methods and nonce input types; defer bundled translation registration to init.
+* Preserve existing metadata, taxonomy, REST and block identities, bundled Chinese, and the legacy-copy activation guard.
 
 = 1.0.1 =
 * Prepare WordPress.org distribution, including native update eligibility and contributor metadata.

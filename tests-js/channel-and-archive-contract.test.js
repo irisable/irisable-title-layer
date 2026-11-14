@@ -175,8 +175,8 @@ test( 'Series icons are decorative, opt-in, and outside the article heading', ()
 	assert.match( renderer, /<img class="wptl-series-icon__image"[\s\S]*?alt=""/ );
 	assert.match( renderer, /esc_url_raw\( \(string\) \$image\[0\], array\( 'http', 'https' \) \)/ );
 	assert.match( frontendCss, /\.wptl-series-icon\s*\{/ );
-	assert.match( renderer, /private static function classicTitleHtml\(\): array[\s\S]*?private static function classicContextHtml/ );
-	const headingAllowlist = renderer.match( /private static function classicTitleHtml\(\): array([\s\S]*?)private static function classicContextHtml/ );
+	assert.match( renderer, /public static function classicTitleHtml\(\): array[\s\S]*?public static function classicContextHtml/ );
+	const headingAllowlist = renderer.match( /public static function classicTitleHtml\(\): array([\s\S]*?)public static function classicContextHtml/ );
 	assert.ok( headingAllowlist );
 	assert.doesNotMatch( headingAllowlist[ 1 ], /'img'/ );
 	assert.doesNotMatch( rankMath, /wptl_icon_id|seriesIcon|series_icon/ );

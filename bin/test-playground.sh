@@ -56,6 +56,9 @@ run_test() {
 	"${playground}" php --wp="${wp_source}" --php="${php_version}" --verbosity=quiet \
 		--mount="${plugin_mount}" --mount="${mu_mount}" \
 		-- /wordpress/wp-content/plugins/wp-title-layer/tests/publisher-roles-smoke.php
+	"${playground}" php --wp="${wp_source}" --php="${php_version}" --verbosity=quiet \
+		--mount="${plugin_mount}" --mount="${mu_mount}" \
+		-- /wordpress/wp-content/plugins/wp-title-layer/tests/review-security-smoke.php
 }
 
 minimum_wp_source="${WPTL_MIN_WP_SOURCE:-https://wordpress.org/wordpress-6.5.zip}"

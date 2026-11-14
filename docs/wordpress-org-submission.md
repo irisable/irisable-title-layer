@@ -1,8 +1,16 @@
 # WordPress.org submission preparation
 
-Date: 2026-11-11. Candidate: 1.0.1. Directory account: `irisable`.
+Updated: 2026-11-15. Candidate: 1.0.2. Directory account: `irisable`.
 
-## Current outcome: accepted for review
+## Current outcome: first-round review received; response in preparation
+
+The November 15 email is **Review in Progress**, including automated/AI-assisted
+findings and an ownership-verification request. It is not approval or a final
+rejection. Candidate 1.0.2 addresses the review; upload and email reply remain
+pending until validation and ownership verification are complete. See the
+[item-by-item review record](wordpress-org-review-2026-11-15.md).
+
+## Historical submission receipt (November 11)
 
 The renamed **Irisable Title Layer 1.0.1** upload was accepted on 2026-11-11.
 The authenticated submission page shows **Awaiting Review**, assigned slug
@@ -20,8 +28,8 @@ Local Plugin Check 2.2.0 selected 31 static checks: **0 errors, 125 reviewed
 warnings**. The full exact-ZIP dual-version matrix passed, as did 99 JS/contracts
 and 9 new-directory/legacy-coexistence/data-preservation checks.
 
-This is NOT manual approval or a live directory release. Next: wait for the
-review email and reply within that submission, not as a new plugin submission.
+This was NOT manual approval or a live directory release. The review email has
+now arrived; respond within that submission, not as a new plugin submission.
 No production redeployment, GitHub release replacement or Obsidian reload.
 
 ## Owner-approved rename
@@ -109,9 +117,9 @@ to a reviewer if requested; the review team can require additional changes.
 | Direct queries / no caching | Migration scans need current data, metadata row IDs and duplicate detection. Atomic compare-and-swap/delete operations protect concurrent author edits and invalidate the relevant WordPress cache. Source ACF key lookup is memoized per resolver. These are intentionally not replaced by stale cached counts or non-atomic read/write operations. |
 | tax_query / meta_query / post__not_in | Required for scoped Series/Season/group membership, sequence management and adjacent navigation. These generic potential-performance warnings do not identify a broken query; retain existing pagination/batching and integration coverage. |
 | Unprefixed functions / hooks | Guarded Secondary Title compatibility functions and legacy hooks preserve existing integrations. Rollback emits WordPress core metadata hooks for its guarded atomic deletion. New plugin-owned interfaces use the plugin prefix or namespace. |
-| load_plugin_textdomain | Keep bundled Simplified Chinese working for existing manual/GitHub installations too; directory language packs can still be used. |
+| load_plugin_textdomain | Keep bundled Simplified Chinese working for existing manual/GitHub installations too; in 1.0.2 registration is deferred to init. Directory language packs can still be used. |
 | CREDITS.md | Intentionally retain human-readable third-party review provenance and attribution; no third-party ZIP or development fixture is distributed. |
-| `wp` trademark warning | Plugin Check's `Trademarks_Check::TRADEMARK_SLUGS` says `wp` is allowed but warns; however, the live upload endpoint rejected the prefix. This warning is now an unresolved submission blocker, pending the owner's naming decision. |
+| `wp` trademark warning | The initial display-name/slug blocker was resolved by the owner-approved Irisable Title Layer rename. Existing wptl data/API identifiers remain for compatibility; the November 15 prefix finding is addressed separately in the review record. |
 
 No telemetry, tracking cookies, outbound content submission, remote executable
 download, license gate, trial limit, or external account requirement was found

@@ -46,9 +46,8 @@ final class ThemeTitleIntegration {
 		add_filter( 'render_block_core/post-title', array( $this, 'replaceBlockTitle' ), 20, 3 );
 
 		// Kadence 1.x calls these actions immediately around its singular H1.
-		// The the_title filter remains inert unless the exact before action arms it.
+		// Attach the_title only while the exact singular heading is being rendered.
 		add_action( 'kadence_single_before_entry_title', array( $this, 'beginKadenceTitle' ), PHP_INT_MAX );
-		add_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99, 2 );
 		add_action( 'kadence_single_after_entry_title', array( $this, 'finishKadenceTitle' ), 1 );
 	}
 
@@ -177,6 +176,7 @@ final class ThemeTitleIntegration {
 
 		$this->kadence_post_id  = $post_id;
 		$this->kadence_fragments = $fragments;
+		add_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99, 2 );
 	}
 
 	/**
@@ -187,6 +187,8 @@ final class ThemeTitleIntegration {
 	 * @param mixed $post_id Post ID.
 	 */
 	public function filterKadenceTitle( $title, $post_id = 0 ): string {
+		// Nonmatching values belong to core/other filters, not this renderer.
+		// Preserve their contract; do not globally escape titles used in other contexts.
 		$original = is_string( $title ) ? $title : (string) $title;
 		$post_id  = absint( $post_id );
 		if ( doing_action( 'kadence_single_before_entry_title' ) ) {
@@ -205,14 +207,15 @@ final class ThemeTitleIntegration {
 		try {
 			$before = (string) ( $this->kadence_fragments['before'] ?? '' );
 			if ( '' !== $before ) {
-				echo $before; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer applied the final allow-list.
+				echo wp_kses( $before, Renderer::classicContextHtml() );
 			}
 			$this->kadence_replaced = true;
 			self::markThemeSlotRendered( $post_id );
 			// Consume the global title arm immediately. The exact Kadence after hook
 			// may still output the already-sanitized subtitle fragment.
 			$this->kadence_post_id = 0;
-			return (string) $this->kadence_fragments['title'];
+			remove_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99 );
+			return wp_kses( (string) $this->kadence_fragments['title'], Renderer::classicTitleHtml() );
 		} catch ( \Throwable $error ) {
 			$this->kadence_replaced = false;
 			return $original;
@@ -224,7 +227,7 @@ final class ThemeTitleIntegration {
 	/** Output the safe after-title fragment only after the exact title matched. */
 	public function finishKadenceTitle(): void {
 		if ( $this->kadence_replaced && ! empty( $this->kadence_fragments['after'] ) ) {
-			echo $this->kadence_fragments['after']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer applied the final allow-list.
+			echo wp_kses( $this->kadence_fragments['after'], Renderer::classicContextHtml() );
 		}
 		$this->resetKadence();
 	}
@@ -428,6 +431,7 @@ final class ThemeTitleIntegration {
 	}
 
 	private function resetKadence(): void {
+		remove_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99 );
 		$this->kadence_post_id  = 0;
 		$this->kadence_fragments = array();
 		$this->kadence_replaced = false;

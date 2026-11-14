@@ -17,3 +17,18 @@ test( 'Archive output escapes its selected heading and avoids the obsolete taxon
 	assert.match( read( 'templates/series-archive.php' ), /echo esc_html\( \$wptl_heading \);/ );
 	assert.match( read( 'includes/Reader/Archive.php' ), /term_description\( \(int\) \$term->term_id \)/ );
 } );
+
+test( 'review fixes scope styles, notices and title filtering without changing persisted identities', () => {
+	const columns = read( 'includes/Admin/PostListColumns.php' );
+	assert.doesNotMatch( columns, /<style>/ );
+	assert.match( columns, /admin_enqueue_scripts/ );
+	assert.match( columns, /'edit.php' !== \$hook_suffix/ );
+	assert.match( read( 'assets/post-list.css' ), /column-wptl_subtitle/ );
+	const theme = read( 'includes/Presentation/ThemeTitleIntegration.php' );
+	const register = theme.slice( theme.indexOf( 'public function register()' ), theme.indexOf( 'public function markQueryLoopDescendant' ) );
+	assert.doesNotMatch( register, /add_filter\( 'the_title'/ );
+	assert.match( theme, /remove_filter\( 'the_title'/ );
+	assert.match( theme, /return wp_kses\( \(string\) \$this->kadence_fragments\['title'\]/ );
+	assert.match( read( 'includes/Plugin.php' ), /add_action\( 'init', array\( __CLASS__, 'register_translations' \), 0 \)/ );
+	assert.match( read( 'includes/Core/ContentGroups.php' ), /TAXONOMY = 'wptl_content_group'/ );
+} );

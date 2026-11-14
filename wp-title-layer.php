@@ -3,7 +3,7 @@
  * Plugin Name:       Irisable Title Layer
  * Plugin URI:        https://github.com/irisable/wp-title-layer
  * Description:       Structured subtitles, series, and context-aware title templates for WordPress.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Irisable
@@ -29,6 +29,11 @@ if ( defined( 'WPTL_FILE' ) || (
 	&& ( in_array( $wptl_legacy_basename, $wptl_active_plugins, true ) || isset( $wptl_network_plugins[ $wptl_legacy_basename ] ) )
 ) ) {
 	add_action( 'admin_notices', static function () {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! current_user_can( 'activate_plugins' ) || ! $screen instanceof \WP_Screen
+			|| ! in_array( $screen->id, array( 'plugins', 'plugins-network' ), true ) ) {
+			return;
+		}
 		echo '<div class="notice notice-warning"><p>' . esc_html__( 'Deactivate the existing WP Title Layer copy before activating Irisable Title Layer. Your titles, Series and settings are preserved.', 'irisable-title-layer' ) . '</p></div>';
 	} );
 	register_activation_hook( __FILE__, static function () {
@@ -38,7 +43,7 @@ if ( defined( 'WPTL_FILE' ) || (
 }
 unset( $wptl_legacy_basename, $wptl_active_plugins, $wptl_network_plugins );
 
-define( 'WPTL_VERSION', '1.0.1' );
+define( 'WPTL_VERSION', '1.0.2' );
 define( 'WPTL_FILE', __FILE__ );
 define( 'WPTL_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WPTL_URL', plugin_dir_url( __FILE__ ) );

@@ -782,7 +782,7 @@ final class Series {
 		if ( ! $term instanceof \WP_Term || ! self::is_claimed_taxonomy( $term->taxonomy ) ) {
 			return;
 		}
-		if ( ! isset( $_POST['wptl_series_term_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wptl_series_term_nonce'] ) ), 'wptl_save_series_term' ) ) {
+		if ( ! isset( $_POST['wptl_series_term_nonce'] ) || ! is_string( $_POST['wptl_series_term_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['wptl_series_term_nonce'] ) ), 'wptl_save_series_term' ) ) {
 			return;
 		}
 		if ( ! current_user_can( 'edit_term', $term_id ) || ! isset( $_POST['wptl_term'] ) || ! is_array( $_POST['wptl_term'] ) ) {

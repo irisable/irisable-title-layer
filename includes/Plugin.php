@@ -35,11 +35,7 @@ final class Plugin {
 	public static function register() {
 		$legacy_active = function_exists( 'get_secondary_title' );
 
-		load_plugin_textdomain(
-			'irisable-title-layer',
-			false,
-			dirname( plugin_basename( WPTL_FILE ) ) . '/languages'
-		);
+		add_action( 'init', array( __CLASS__, 'register_translations' ), 0 );
 
 		Core_Bootstrap::register( ! $legacy_active );
 		Migration_Bootstrap::register();
@@ -61,13 +57,21 @@ final class Plugin {
 		Integrations_Bootstrap::register();
 	}
 
+	/** Register the bundled fallback for manual installs; core language packs take priority. */
+	public static function register_translations(): void {
+		load_plugin_textdomain( 'irisable-title-layer', false, dirname( plugin_basename( WPTL_FILE ) ) . '/languages' );
+	}
+
 	/**
 	 * Warn administrators while the legacy plugin still owns title output.
 	 *
 	 * @return void
 	 */
 	public static function render_legacy_notice() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! current_user_can( 'manage_options' ) || ! $screen instanceof \WP_Screen
+			|| ( ! in_array( $screen->id, array( 'plugins', 'plugins-network' ), true )
+				&& false === strpos( $screen->id, '_page_wp-title-layer' ) ) ) {
 			return;
 		}
 

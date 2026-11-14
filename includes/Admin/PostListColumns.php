@@ -20,7 +20,7 @@ final class PostListColumns {
 
 	public static function register(): void {
 		add_action( 'init', array( __CLASS__, 'registerPostTypeHooks' ), 30 );
-		add_action( 'admin_head-edit.php', array( __CLASS__, 'renderStyles' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueueStyles' ) );
 	}
 
 	public static function registerPostTypeHooks(): void {
@@ -74,18 +74,12 @@ final class PostListColumns {
 		echo '<span class="wptl-admin-subtitle">' . esc_html( $subtitle ) . '</span>';
 	}
 
-	public static function renderStyles(): void {
+	public static function enqueueStyles( string $hook_suffix ): void {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen instanceof \WP_Screen || ! in_array( (string) $screen->post_type, self::$post_types, true ) ) {
+		if ( 'edit.php' !== $hook_suffix || ! $screen instanceof \WP_Screen || ! in_array( (string) $screen->post_type, self::$post_types, true ) ) {
 			return;
 		}
-		?>
-		<style>
-			.fixed .column-wptl_subtitle { width: 20%; }
-			.wptl-admin-subtitle { display: block; max-width: 32rem; line-height: 1.4; }
-			@media (max-width: 1100px) { .fixed .column-wptl_subtitle { width: 16%; } }
-		</style>
-		<?php
+		wp_enqueue_style( 'wptl-post-list', WPTL_URL . 'assets/post-list.css', array(), WPTL_VERSION );
 	}
 
 	private static function subtitle( int $post_id ): string {

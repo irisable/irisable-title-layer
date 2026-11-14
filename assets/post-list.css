@@ -1,0 +1,5 @@
+.fixed .column-wptl_subtitle { width: 20%; }
+.wptl-admin-subtitle { display: block; max-width: 32rem; line-height: 1.4; }
+@media (max-width: 1100px) {
+	.fixed .column-wptl_subtitle { width: 16%; }
+}

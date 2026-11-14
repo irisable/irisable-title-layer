@@ -797,7 +797,7 @@ final class Renderer {
 	}
 
 	/** Phrasing-only allow-list for content placed inside a theme heading. */
-	private static function classicTitleHtml(): array {
+	public static function classicTitleHtml(): array {
 		return array(
 			'span'   => array( 'class' => true, 'aria-hidden' => true ),
 			'small'  => array( 'class' => true ),
@@ -808,7 +808,7 @@ final class Renderer {
 	}
 
 	/** Narrow block-level allow-list for context adjacent to a theme heading. */
-	private static function classicContextHtml(): array {
+	public static function classicContextHtml(): array {
 		return array_merge(
 			self::classicTitleHtml(),
 			array(
