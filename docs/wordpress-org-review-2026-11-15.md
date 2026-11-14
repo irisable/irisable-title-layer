@@ -2,7 +2,8 @@
 
 Received November 15, 2026 (Asia/Shanghai), for the submitted 1.0.1 ZIP.
 Candidate: **1.0.2**. Slug remains `irisable-title-layer`.
-Status: local corrections and validation; no updated upload or email reply yet.
+Status: local corrections and exact-package validation complete; ownership
+verification, updated upload and email reply remain pending.
 The message is a mixed automated/AI-assisted review, not a confirmed manual
 security assessment. Its generic checks are not themselves proof of a defect.
 
@@ -41,9 +42,38 @@ security assessment. Its generic checks are not themselves proof of a defect.
 
 ## Verification
 
-Record exact test counts, package hash, static-check results and any remaining
-warnings here after final package validation. Source and installed ZIP must both
-be tested; a source-only pass does not establish the ZIP is correct.
+Candidate source commit: `69e5efe`. Artifact: `irisable-title-layer-1.0.2.zip`.
+SHA-256: `b98907e2c2fecb64f3680c4fba8ba59de00fb2cf09694b3762ee7ec54557dd90`.
+A second git archive of that fixed commit compared byte-for-byte equal. Archive
+inventory, unzip integrity and version consistency passed. The submitted 1.0.1
+ZIP remains unchanged (SHA-256 `416dd4148eb0cb1508b77838ac321177140019b3cdccbb5e78143534290a2821`).
+
+Both the source and extracted ZIP passed the complete matrix on WordPress 6.5 /
+PHP 7.4 and WordPress 7.1 / PHP 8.3:
+
+| Suite | Checks per environment |
+| --- | ---: |
+| PHP syntax | 61 files |
+| Integration, including Chinese locale and title rendering | 828 |
+| Sequence | 111 |
+| Book structure | 67 |
+| Content groups | 57 |
+| Publisher REST contract | 46 |
+| New security/output regression | 56 |
+
+The extracted directory-root ZIP additionally passed 9 clean-activation and 13
+legacy-coexistence/data-preservation checks in each environment. Activation uses
+the real WordPress activate_plugin API; the clean case enables WP_DEBUG and
+turns warnings/notices into test failures. No production site was modified.
+
+JavaScript/syntax/contracts: **100 passed**. Official Kadence 1.6.0 rendered-template
+suite: **51 passed**. Official Plugin Check 2.2.0 on the extracted ZIP: **31 static
+checks, 0 errors, 125 warnings**. Warning categories/counts are unchanged from the
+1.0.1 local report; none were suppressed to obtain a green result. These are
+static results, not a claim of running PCP runtime checks or approval.
+
+Local evidence: `build/wporg-review-20261115/` (ignored from Git and distribution),
+including full matrix logs, Plugin Check JSON, and an unsent reply draft.
 
 New tests: `tests/review-security-smoke.php`, `tests/activation-smoke.php`, expanded
 `tests/distribution-smoke.php`, plus JS contract checks. Existing full integration,
