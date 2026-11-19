@@ -32,4 +32,25 @@ The worker's prepared, bounded SQL reads the current relationship IDs rather
 than using an unbounded cached member list; no arbitrary SQL or user identifiers
 are interpolated. The WordPress APIs remain responsible for updating metadata.
 
+Candidate source: `f3ba6ec`. Artifact: `irisable-title-layer-1.0.3.zip`.
+SHA-256: `4eddb7cada2ce08483afc0fab131e6a383cf4a70c0423831b958e67e38a9278d`.
+ZIP integrity and a byte-identical rebuild passed. The 1.0.2 ZIP is unchanged.
+The 101 JavaScript/contracts and 51 official Kadence 1.6.0 template checks passed.
+Source and the extracted ZIP passed WordPress 6.5/PHP 7.4 and 7.1/PHP 8.3:
+62 PHP files parsed, 828 integration, 111 sequence, 67 book structure, 72 content
+group, 46 Publisher and 59 security/output checks per environment. The extracted
+ZIP additionally passed 9 actual clean-activation/`WP_DEBUG` and 13 legacy
+coexistence/data-preservation checks in each environment.
+Plugin Check 2.2.0 ran 31 static checks on the exact ZIP: **0 errors, 127 warnings**.
+The two additional warnings are for the fresh direct relationship query and the
+absence of query caching; the prepared keyset scan deliberately reads the live
+membership on each worker run. No warnings were suppressed.
+
+The existing WordPress.org submission accepted the 1.0.3 ZIP on November 19.
+The portal displayed the new-version receipt and version 1.0.3. The concise
+technical reply was sent to plugins@wordpress.org in the existing review
+thread at 10:20 Asia/Shanghai; Gmail confirmed it. Awaiting the next review;
+upload and reply are not directory approval. Evidence, including logs and the
+upload/reply screenshots, is in the ignored `build/wporg-review-20261119/` folder.
+
 No production update, GitHub push, ownership-record change or new submission.

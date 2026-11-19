@@ -2,11 +2,14 @@
 
 Updated: 2026-11-19. Candidate: 1.0.3. Directory account: `irisable`.
 
-## Current outcome: second review received; 1.0.3 in preparation
+## Current outcome: 1.0.3 update uploaded and second-round reply sent
 
 The second review of 1.0.2 identifies Kadence fallback escaping and synchronous
-content-group reconciliation. See the [second-round record](wordpress-org-review-2026-11-19.md)
-for the corrections, validation and submission status. The slug remains unchanged.
+content-group reconciliation. The 1.0.3 update was tested, uploaded to the
+existing submission and followed by a reply in the original review thread on
+November 19. Awaiting the review team's response. See the
+[second-round record](wordpress-org-review-2026-11-19.md) for evidence and
+validation. The slug remains unchanged.
 
 ## First review outcome: 1.0.2 uploaded and review reply sent
 
