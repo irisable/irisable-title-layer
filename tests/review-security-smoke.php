@@ -120,12 +120,19 @@ set_current_screen( 'plugins' );
 ob_start(); WPTitleLayer\Plugin::render_legacy_notice(); $notice = ob_get_clean();
 $assert( '' === $notice, 'Subscriber saw an administrative notice.' );
 
-// Plugin-owned output is escaped; unrelated filter values remain byte-for-byte intact.
+// Every return from the narrowly scoped callback is escaped.
 $integration = new ThemeTitleIntegration();
 $integration->register();
 $assert( false === has_filter( 'the_title', array( $integration, 'filterKadenceTitle' ) ), 'A global title filter was installed at bootstrap.' );
 $original = '<em>A &amp; B</em>';
 $assert( $original === $integration->filterKadenceTitle( $original, 17 ), 'Unrelated title formatting was changed.' );
+$assert( $original === $integration->filterKadenceTitle( '<em onclick="bad()">A &amp; B</em><img src="fixture.jpg">', 17 ), 'Fallback did not apply the title allow-list.' );
+$during_before = static function () use ( $integration, $original, $assert ) {
+	$assert( $original === $integration->filterKadenceTitle( '<em onclick="bad()">A &amp; B</em>', 17 ), 'Before-action fallback did not apply the title allow-list.' );
+};
+add_action( 'kadence_single_before_entry_title', $during_before, 5 );
+do_action( 'kadence_single_before_entry_title' );
+remove_action( 'kadence_single_before_entry_title', $during_before, 5 );
 foreach ( array( 'kadence_post_id' => 17, 'kadence_fragments' => array(
 	'before' => '<p class="wptl-context"><a href="javascript:alert(1)" onclick="bad()">Context</a></p>',
 	'title' => '<span class="wptl-title" onclick="bad()">A &amp; B</span><img src=x onerror="bad()">',
@@ -140,5 +147,20 @@ ob_start(); $title = $integration->filterKadenceTitle( $original, 17 ); $integra
 $assert( false === strpos( $title . $context, 'onclick' ) && false === strpos( $title . $context, 'javascript:' ), 'Unsafe output escaped the title allow-list.' );
 $assert( false === strpos( $title, '<img' ) && false !== strpos( $title, 'A &amp; B' ), 'Heading allow-list or entity handling regressed.' );
 $assert( false === has_filter( 'the_title', array( $integration, 'filterKadenceTitle' ) ), 'Title filter remained after rendering.' );
+$armed = new ReflectionProperty( $integration, 'kadence_post_id' );
+$armed->setAccessible( true );
+$armed->setValue( $integration, 17 );
+$fragments = new ReflectionProperty( $integration, 'kadence_fragments' );
+$fragments->setAccessible( true );
+$fragments->setValue( $integration, array( 'title' => '<span>Interrupted fragment</span>' ) );
+$interrupt = static function ( $value ) {
+	if ( false !== strpos( $value, 'Interrupted fragment' ) ) { throw new RuntimeException( 'Fixture rendering error' ); }
+	return $value;
+};
+add_filter( 'pre_kses', $interrupt );
+add_filter( 'the_title', array( $integration, 'filterKadenceTitle' ), 99, 2 );
+$fallback = $integration->filterKadenceTitle( '<em onclick="bad()">A &amp; B</em>', 17 );
+remove_filter( 'pre_kses', $interrupt );
+$assert( $original === $fallback && false === has_filter( 'the_title', array( $integration, 'filterKadenceTitle' ) ), 'Error fallback did not escape the output and detach.' );
 restore_error_handler();
 echo "Review security checks passed: $checks\n";

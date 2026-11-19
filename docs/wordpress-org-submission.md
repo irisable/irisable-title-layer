@@ -1,8 +1,14 @@
 # WordPress.org submission preparation
 
-Updated: 2026-11-15. Candidate: 1.0.2. Directory account: `irisable`.
+Updated: 2026-11-19. Candidate: 1.0.3. Directory account: `irisable`.
 
-## Current outcome: 1.0.2 uploaded and review reply sent
+## Current outcome: second review received; 1.0.3 in preparation
+
+The second review of 1.0.2 identifies Kadence fallback escaping and synchronous
+content-group reconciliation. See the [second-round record](wordpress-org-review-2026-11-19.md)
+for the corrections, validation and submission status. The slug remains unchanged.
+
+## First review outcome: 1.0.2 uploaded and review reply sent
 
 The November 15 email is **Review in Progress**, including automated/AI-assisted
 findings and an ownership-verification request. It is not approval or a final

@@ -187,12 +187,12 @@ final class ThemeTitleIntegration {
 	 * @param mixed $post_id Post ID.
 	 */
 	public function filterKadenceTitle( $title, $post_id = 0 ): string {
-		// Nonmatching values belong to core/other filters, not this renderer.
-		// Preserve their contract; do not globally escape titles used in other contexts.
+		// This filter is only attached around the supported Kadence heading.
+		// Preserve safe inline formatting and entities, but escape every return.
 		$original = is_string( $title ) ? $title : (string) $title;
 		$post_id  = absint( $post_id );
 		if ( doing_action( 'kadence_single_before_entry_title' ) ) {
-			return $original;
+			return wp_kses( $original, Renderer::classicTitleHtml() );
 		}
 		if (
 			$this->rendering
@@ -200,11 +200,12 @@ final class ThemeTitleIntegration {
 			|| $post_id !== $this->kadence_post_id
 			|| empty( $this->kadence_fragments['title'] )
 		) {
-			return $original;
+			return wp_kses( $original, Renderer::classicTitleHtml() );
 		}
 
 		$this->rendering = true;
 		try {
+			$title_escaped = wp_kses( (string) $this->kadence_fragments['title'], Renderer::classicTitleHtml() );
 			$before = (string) ( $this->kadence_fragments['before'] ?? '' );
 			if ( '' !== $before ) {
 				echo wp_kses( $before, Renderer::classicContextHtml() );
@@ -215,10 +216,12 @@ final class ThemeTitleIntegration {
 			// may still output the already-sanitized subtitle fragment.
 			$this->kadence_post_id = 0;
 			remove_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99 );
-			return wp_kses( (string) $this->kadence_fragments['title'], Renderer::classicTitleHtml() );
+			return $title_escaped;
 		} catch ( \Throwable $error ) {
 			$this->kadence_replaced = false;
-			return $original;
+			$this->kadence_post_id = 0;
+			remove_filter( 'the_title', array( $this, 'filterKadenceTitle' ), 99 );
+			return wp_kses( $original, Renderer::classicTitleHtml() );
 		} finally {
 			$this->rendering = false;
 		}

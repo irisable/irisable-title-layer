@@ -28,7 +28,18 @@ test( 'review fixes scope styles, notices and title filtering without changing p
 	const register = theme.slice( theme.indexOf( 'public function register()' ), theme.indexOf( 'public function markQueryLoopDescendant' ) );
 	assert.doesNotMatch( register, /add_filter\( 'the_title'/ );
 	assert.match( theme, /remove_filter\( 'the_title'/ );
-	assert.match( theme, /return wp_kses\( \(string\) \$this->kadence_fragments\['title'\]/ );
+	const callback = theme.slice( theme.indexOf( 'public function filterKadenceTitle' ), theme.indexOf( 'public function finishKadenceTitle' ) );
+	assert.doesNotMatch( callback, /return \$original;/ );
+	assert.equal( [ ...callback.matchAll( /return wp_kses\( \$original, Renderer::classicTitleHtml\(\) \);/g ) ].length, 3 );
+	assert.match( callback, /\$title_escaped = wp_kses\(/ );
 	assert.match( read( 'includes/Plugin.php' ), /add_action\( 'init', array\( __CLASS__, 'register_translations' \), 0 \)/ );
 	assert.match( read( 'includes/Core/ContentGroups.php' ), /TAXONOMY = 'wptl_content_group'/ );
+} );
+
+test( 'Series structure changes queue paginated reindexing outside the save request', () => {
+	const source = read( 'includes/Core/ContentGroupReconciliation.php' );
+	const trigger = source.slice( source.indexOf( 'function queue_structure_change' ), source.indexOf( 'function run_batch' ) );
+	assert.doesNotMatch( trigger, /get_objects_in_term|ContentGroups::sync|\$wpdb/ );
+	assert.match( source, /object_id > %d ORDER BY object_id ASC LIMIT %d/ );
+	assert.match( source, /wp_schedule_single_event/ );
 } );

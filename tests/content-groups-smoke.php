@@ -3,6 +3,7 @@
 require_once '/wordpress/wp-load.php';
 
 use WPTitleLayer\Core\ContentGroups as Groups;
+use WPTitleLayer\Core\ContentGroupReconciliation as Reconciliation;
 use WPTitleLayer\Core\Series;
 use WPTitleLayer\Core\Sequence;
 use WPTitleLayer\Reader\Archive;
@@ -36,6 +37,16 @@ function group_query( $series, $group, $season = '', $page = 1, $size = 20 ) {
 	$wp_query = $old_query;
 	$wp_the_query = $old_main;
 	return $result;
+}
+function group_batch( $series ) {
+	$state = get_term_meta( $series->term_id, '_wptl_group_reconciliation', true );
+	if ( ! is_array( $state ) ) { throw new RuntimeException( 'Missing reconciliation checkpoint.' ); }
+	$args = array( $series->term_id, $state['generation'] );
+	$event = wp_next_scheduled( Reconciliation::HOOK, $args );
+	if ( false === $event ) { throw new RuntimeException( 'Missing reconciliation event.' ); }
+	// Core unschedules a single event before calling its action.
+	wp_unschedule_event( $event, Reconciliation::HOOK, $args );
+	do_action( Reconciliation::HOOK, ...$args );
 }
 
 $admin = wp_insert_user( array( 'user_login' => 'groups-admin', 'user_pass' => wp_generate_password(), 'role' => 'administrator' ) );
@@ -152,7 +163,63 @@ foreach ( array( 'ordered', 'unordered' ) as $mode ) {
 
 update_term_meta( $shape->term_id, 'wptl_series_structure', 'flat' );
 Groups::flush();
+group_batch( $shape );
 group_check( Groups::for_post( $first ) && '' === Groups::post_scope( $first, $shape ), 'Changing Series structure left existing groups unresolved.' );
+
+// A structural save must not reconcile all existing posts synchronously.
+$large_result = wp_insert_term( 'Reconciliation fixture', 'wptl_series' );
+$large = get_term( $large_result['term_id'], 'wptl_series' );
+$members = array();
+for ( $i = 0; $i < 107; ++$i ) {
+	$members[] = group_post( $large, 's1', 'Scoped unit', $i + 1, 106 === $i ? 'draft' : 'publish' );
+}
+$flat_id = (int) get_post_meta( $members[0], '_wptl_group_id', true );
+Sequence::persist_seasons( $large, array( array( 'key' => 's1', 'label' => 'First season', 'sort' => 1 ) ) );
+update_term_meta( $large->term_id, 'wptl_series_structure', 'seasoned' );
+Groups::flush();
+$state = get_term_meta( $large->term_id, '_wptl_group_reconciliation', true );
+$generation = $state['generation'];
+group_check( 0 === $state['after'], 'Saving the structure advanced the background cursor.' );
+group_check( $flat_id === (int) get_post_meta( $members[0], '_wptl_group_id', true ) && $flat_id === (int) get_post_meta( $members[106], '_wptl_group_id', true ), 'Saving structure immediately rewrote group IDs.' );
+group_check( 0 === (int) group_query( $large, $flat_id )->found_posts, 'Old flat membership leaked during the background rebuild.' );
+
+group_batch( $large );
+$state = get_term_meta( $large->term_id, '_wptl_group_reconciliation', true );
+$season_id = (int) get_post_meta( $members[0], '_wptl_group_id', true );
+group_check( $season_id > 0 && $flat_id !== $season_id && $members[49] === $state['after'], 'First worker did not stop exactly at the 50-member checkpoint.' );
+group_check( $flat_id === (int) get_post_meta( $members[50], '_wptl_group_id', true ) && $flat_id === (int) get_post_meta( $members[106], '_wptl_group_id', true ), 'First batch touched unprocessed members.' );
+
+$interrupt = static function ( $meta_id, $object_id, $meta_key ) use ( $members ) {
+	if ( '_wptl_group_id' === $meta_key && $members[53] === (int) $object_id ) { throw new RuntimeException( 'simulated_worker_interruption' ); }
+};
+add_action( 'updated_post_meta', $interrupt, 5, 3 );
+$interrupted = false;
+try { group_batch( $large ); } catch ( RuntimeException $error ) {
+	if ( 'simulated_worker_interruption' !== $error->getMessage() ) { throw $error; }
+	$interrupted = true;
+} finally { remove_action( 'updated_post_meta', $interrupt, 5 ); }
+group_check( $interrupted && $state === get_term_meta( $large->term_id, '_wptl_group_reconciliation', true ), 'Interrupted batch did not retain its prior checkpoint.' );
+group_check( false !== wp_next_scheduled( Reconciliation::HOOK, array( $large->term_id, $generation ) ), 'Interrupted batch lost its retry.' );
+group_batch( $large );
+group_check( $members[99] === get_term_meta( $large->term_id, '_wptl_group_reconciliation', true )['after'], 'Retry did not resume from the previous successfully committed batch.' );
+group_batch( $large );
+group_check( ! metadata_exists( 'term', $large->term_id, '_wptl_group_reconciliation' ) && false === wp_next_scheduled( Reconciliation::HOOK, array( $large->term_id, $generation ) ), 'Completed job retained its checkpoint or retry event.' );
+$indexed = array_map( static function ( $id ) { return (int) get_post_meta( $id, '_wptl_group_id', true ); }, $members );
+group_check( array( $season_id ) === array_values( array_unique( $indexed ) ), 'Completed batches missed members, including the draft.' );
+group_check( 106 === (int) group_query( $large, $season_id, '1' )->found_posts, 'Group archive lost published members or exposed draft content.' );
+
+// The superseded worker must leave the latest structure and cursor alone.
+update_term_meta( $large->term_id, 'wptl_series_structure', 'flat' );
+group_check( 0 === (int) group_query( $large, $season_id )->found_posts, 'Inactive season group leaked during the background rebuild.' );
+$stale = get_term_meta( $large->term_id, '_wptl_group_reconciliation', true );
+group_batch( $large );
+update_term_meta( $large->term_id, 'wptl_series_structure', 'seasoned' );
+$latest = get_term_meta( $large->term_id, '_wptl_group_reconciliation', true );
+do_action( Reconciliation::HOOK, $large->term_id, $stale['generation'] );
+group_check( $latest !== $stale && 0 === $latest['after'] && $latest === get_term_meta( $large->term_id, '_wptl_group_reconciliation', true ), 'Superseded worker did not yield to the latest generation.' );
+group_batch( $large ); group_batch( $large ); group_batch( $large );
+group_check( $season_id === (int) get_post_meta( $members[0], '_wptl_group_id', true ), 'Latest generation did not restore the original stable season group.' );
+group_check( 'Scoped unit' === get_post_meta( $members[106], 'wptl_series_group', true ), 'Background reconciliation modified canonical group text.' );
 
 $author = wp_insert_user( array( 'user_login' => 'group-author', 'user_pass' => wp_generate_password(), 'role' => 'author' ) );
 wp_set_current_user( $author );

@@ -21,9 +21,7 @@ final class ContentGroups {
 			add_action( $hook, array( __CLASS__, 'meta_changed' ), 30, 3 );
 		}
 		add_action( 'set_object_terms', array( __CLASS__, 'terms_changed' ), 40, 4 );
-		foreach ( array( 'added_term_meta', 'updated_term_meta', 'deleted_term_meta' ) as $hook ) {
-			add_action( $hook, array( __CLASS__, 'series_structure_changed' ), 40, 3 );
-		}
+		ContentGroupReconciliation::register();
 		add_action( 'shutdown', array( __CLASS__, 'flush' ), 6 );
 		add_action( 'rest_api_init', array( __CLASS__, 'rest_routes' ), 40 );
 		add_filter( 'query_vars', static function ( $vars ) { $vars[] = self::QUERY_VAR; return $vars; } );
@@ -44,16 +42,6 @@ final class ContentGroups {
 		$ids = array_keys( self::$pending );
 		self::$pending = array();
 		foreach ( $ids as $id ) { self::sync( $id ); }
-	}
-
-	/** Reconcile existing memberships when the editor changes flat/seasoned structure. */
-	public static function series_structure_changed( $meta_id, $term_id, $key ): void {
-		if ( Schema::TERM_META_SERIES_STRUCTURE !== $key || '' === Series::claimed_taxonomy() ) { return; }
-		$ids = get_objects_in_term( (int) $term_id, Series::claimed_taxonomy() );
-		if ( is_wp_error( $ids ) ) { return; }
-		foreach ( $ids as $id ) {
-			if ( '' !== (string) get_post_meta( (int) $id, Schema::META_SERIES_GROUP, true ) ) { self::$pending[ (int) $id ] = true; }
-		}
 	}
 
 	/** Groups belong to one Series and one effective season (empty for Series-wide entries). */
@@ -105,15 +93,15 @@ final class ContentGroups {
 		return is_wp_error( $groups ) ? array() : $groups;
 	}
 
-	public static function sync( int $post_id ): void {
+	public static function sync( int $post_id ): bool {
 		unset( self::$pending[ $post_id ] );
-		if ( wp_is_post_revision( $post_id ) || ! get_post( $post_id ) ) { return; }
+		if ( wp_is_post_revision( $post_id ) || ! get_post( $post_id ) ) { return true; }
 		$series = Series::get_primary_term( $post_id );
 		$label = trim( (string) get_post_meta( $post_id, Schema::META_SERIES_GROUP, true ) );
 		$season = $series ? self::post_scope( $post_id, $series ) : null;
 		if ( ! $series || '' === $label || null === $season || Schema::ROLE_ARTICLE !== BookStructure::role( $post_id ) ) {
 			delete_post_meta( $post_id, Schema::META_GROUP_ID );
-			return;
+			return ! metadata_exists( 'post', $post_id, Schema::META_GROUP_ID );
 		}
 		$group = self::for_post( $post_id, $series );
 		if ( ! $group ) {
@@ -123,15 +111,17 @@ final class ContentGroups {
 			if ( is_wp_error( $result ) ) {
 				// Concurrent publishers may have inserted the same scoped name.
 				$existing = get_term( (int) $result->get_error_data( 'term_exists' ), self::TAXONOMY );
-				if ( ! $existing instanceof \WP_Term || $slug !== $existing->slug ) { return; }
+				if ( ! $existing instanceof \WP_Term || $slug !== $existing->slug ) { return false; }
 				$result = array( 'term_id' => $existing->term_id );
 			}
 			update_term_meta( $result['term_id'], '_wptl_scope', $scope );
 			update_term_meta( $result['term_id'], '_wptl_series', $series->term_id );
 			update_term_meta( $result['term_id'], '_wptl_season', $season );
 			$group = get_term( $result['term_id'], self::TAXONOMY );
+			if ( ! $group instanceof \WP_Term || ! self::matches( $group, $scope, $label ) ) { return false; }
 		}
-		if ( $group instanceof \WP_Term ) { update_post_meta( $post_id, Schema::META_GROUP_ID, $group->term_id ); }
+		update_post_meta( $post_id, Schema::META_GROUP_ID, $group->term_id );
+		return (int) get_post_meta( $post_id, Schema::META_GROUP_ID, true ) === $group->term_id;
 	}
 
 	public static function url( \WP_Term $group, \WP_Term $series ): string {
@@ -151,8 +141,10 @@ final class ContentGroups {
 		$raw_season = $query->get( Schema::QUERY_VAR_SEASON );
 		$season_token = is_scalar( $raw_season ) ? (string) $raw_season : 'invalid';
 		$resolved = '' !== $season_token && $series instanceof \WP_Term ? Sequence::resolve_season_token( $series, $season_token ) : null;
+		$is_seasoned = $series instanceof \WP_Term && Series::is_seasoned( $series );
 		if ( ! $series instanceof \WP_Term || ! $group instanceof \WP_Term
 			|| (int) $series->term_id !== (int) get_term_meta( $group->term_id, '_wptl_series', true )
+			|| $is_seasoned !== ( '' !== $season )
 			|| ( '' !== $season && ! Series::season( $series, $season ) )
 			|| ( '' !== $season_token && ( ! is_array( $resolved ) || $season !== $resolved['season']['key'] ) ) ) {
 			$query->set( 'post__in', array( 0 ) ); return;
@@ -167,10 +159,8 @@ final class ContentGroups {
 			array( 'key' => Schema::META_SERIES_ROLE, 'value' => array( '', Schema::ROLE_ARTICLE ), 'compare' => 'IN' ),
 		);
 		if ( $query->get( 'meta_query' ) ) { $meta[] = $query->get( 'meta_query' ); }
-		if ( Series::is_seasoned( $series ) ) {
-			$meta[] = '' !== $season
-				? array( 'key' => Schema::META_SEASON_KEY, 'value' => $season )
-				: array( 'key' => Schema::META_SERIES_SCOPE, 'value' => Schema::SCOPE_SERIES );
+		if ( $is_seasoned ) {
+			$meta[] = array( 'key' => Schema::META_SEASON_KEY, 'value' => $season );
 		}
 		$query->set( 'meta_query', $meta );
 	}
