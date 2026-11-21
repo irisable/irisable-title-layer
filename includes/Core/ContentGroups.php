@@ -7,6 +7,7 @@ defined( 'ABSPATH' ) || exit;
 final class ContentGroups {
 	public const TAXONOMY = 'wptl_content_group';
 	public const QUERY_VAR = 'wptl_group';
+	private const SUGGESTION_SCAN_LIMIT = 200;
 	private static $pending = array();
 
 	public static function register_taxonomy(): void {
@@ -150,6 +151,7 @@ final class ContentGroups {
 			$query->set( 'post__in', array( 0 ) ); return;
 		}
 		$query->set( 'wptl_active_group', $group );
+		$query->set( 'has_password', false );
 		if ( '' !== $season ) { $query->set( Schema::QUERY_VAR_RESOLVED_SEASON, $season ); }
 		// AND with existing filters; never replace theme or WordPress restrictions.
 		$meta = array( 'relation' => 'AND', array( 'key' => Schema::META_GROUP_ID, 'value' => $group->term_id, 'compare' => '=', 'type' => 'NUMERIC' ) );
@@ -171,39 +173,106 @@ final class ContentGroups {
 			add_filter( 'rest_prepare_' . $type, static function ( $response, $post ) {
 				$data = $response->get_data();
 				if ( isset( $data['meta'] ) && array_key_exists( Schema::META_SERIES_GROUP, $data['meta'] ) ) {
-					$group = self::for_post( (int) $post->ID );
-					if ( $group ) { $data['meta'][ Schema::META_SERIES_GROUP ] = $group->name; $response->set_data( $data ); }
+					if ( ! self::is_public_member( $post ) && ( ! current_user_can( 'read_post', $post->ID ) || ! current_user_can( 'edit_post', $post->ID ) ) ) {
+						unset( $data['meta'][ Schema::META_SERIES_GROUP ] );
+					} else {
+						$group = self::for_post( (int) $post->ID );
+						if ( $group ) { $data['meta'][ Schema::META_SERIES_GROUP ] = $group->name; }
+					}
+					$response->set_data( $data );
 				}
 				return $response;
 			}, 110, 2 );
 		}
 		register_rest_route( 'wp-title-layer/v1', '/groups', array(
 			'methods' => 'GET', 'permission_callback' => array( __CLASS__, 'can_list' ),
-			'callback' => static function ( $request ) {
-				$series = get_term( (int) $request['series'], Series::claimed_taxonomy() );
-				$season = sanitize_key( (string) $request['season'] );
-				if ( ! $series instanceof \WP_Term ) { return array(); }
-				return array_map( static function ( $group ) { return array( 'id' => $group->term_id, 'label' => $group->name, 'aliases' => array_values( array_filter( (array) get_term_meta( $group->term_id, '_wptl_aliases', true ), static function ( $value ) { return '' !== (string) $value; } ) ) ); }, self::groups( $series, $season ) );
-			},
+			'callback' => array( __CLASS__, 'list_suggestions' ),
+			'args' => array(
+				'series' => array( 'type' => 'integer', 'minimum' => 0, 'default' => 0, 'validate_callback' => 'rest_validate_request_arg', 'sanitize_callback' => 'rest_sanitize_request_arg' ),
+				'season' => array( 'type' => 'string', 'default' => '', 'validate_callback' => 'rest_validate_request_arg', 'sanitize_callback' => 'sanitize_key' ),
+				'post'   => array( 'type' => 'integer', 'minimum' => 0, 'default' => 0, 'validate_callback' => 'rest_validate_request_arg', 'sanitize_callback' => 'rest_sanitize_request_arg' ),
+			),
 		) );
 		register_rest_route( 'wp-title-layer/v1', '/groups/(?P<id>\d+)', array(
-			'methods' => 'POST',
-			'permission_callback' => static function () {
-				$taxonomy = get_taxonomy( Series::claimed_taxonomy() );
-				return $taxonomy && current_user_can( $taxonomy->cap->edit_terms );
-			},
+			'methods' => 'POST', 'permission_callback' => array( __CLASS__, 'can_rename' ),
 			'callback' => array( __CLASS__, 'rename' ),
-			'args' => array( 'label' => array( 'required' => true, 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ) ),
+			'args' => array(
+				'label' => array( 'required' => true, 'type' => 'string', 'validate_callback' => 'rest_validate_request_arg', 'sanitize_callback' => 'sanitize_text_field' ),
+				'post'  => array( 'type' => 'integer', 'minimum' => 0, 'default' => 0, 'validate_callback' => 'rest_validate_request_arg', 'sanitize_callback' => 'rest_sanitize_request_arg' ),
+			),
 		) );
 	}
 
 	public static function can_list(): bool {
 		$taxonomy = get_taxonomy( Series::claimed_taxonomy() );
-		return $taxonomy && current_user_can( $taxonomy->cap->assign_terms );
+		return is_user_logged_in() && $taxonomy && current_user_can( $taxonomy->cap->assign_terms );
+	}
+
+	/** Only publicly viewable, unprotected posts can expose grouping on archives. */
+	public static function is_public_member( \WP_Post $post ): bool {
+		return '' === $post->post_password && is_post_publicly_viewable( $post );
+	}
+
+	private static function editable_group( int $post_id ): ?\WP_Term {
+		$post = $post_id > 0 ? get_post( $post_id ) : null;
+		if ( ! $post instanceof \WP_Post || wp_is_post_revision( $post_id ) || in_array( $post->post_status, array( 'trash', 'auto-draft', 'inherit' ), true ) || ! current_user_can( 'read_post', $post_id ) || ! current_user_can( 'edit_post', $post_id ) ) {
+			return null;
+		}
+		return self::for_post( $post_id );
+	}
+
+	/** Offer recent public groups plus the caller's editable current post, not a term dump. */
+	public static function list_suggestions( \WP_REST_Request $request ): \WP_REST_Response {
+		$response = new \WP_REST_Response( array() );
+		$response->header( 'Cache-Control', 'private, no-store' );
+		$taxonomy = get_taxonomy( Series::claimed_taxonomy() );
+		$series = $taxonomy && (int) $request['series'] > 0 ? get_term( (int) $request['series'], $taxonomy->name ) : null;
+		$season = (string) $request['season'];
+		if ( ! $series instanceof \WP_Term || Series::is_seasoned( $series ) !== ( '' !== $season ) || ( '' !== $season && ! Series::season( $series, $season ) ) ) {
+			return $response;
+		}
+
+		$rows = array();
+		$scope = self::scope( $series, $season );
+		$post_types = array_values( array_filter( $taxonomy->object_type, 'is_post_type_viewable' ) );
+		if ( $post_types ) {
+			$meta = array( array( 'key' => Schema::META_SERIES_GROUP, 'value' => '', 'compare' => '!=' ) );
+			if ( '' !== $season ) { $meta[] = array( 'key' => Schema::META_SEASON_KEY, 'value' => $season ); }
+			$posts = new \WP_Query( array(
+				'post_type' => $post_types, 'post_status' => 'publish', 'has_password' => false,
+				'posts_per_page' => self::SUGGESTION_SCAN_LIMIT, 'no_found_rows' => true, 'ignore_sticky_posts' => true,
+				'orderby' => array( 'modified' => 'DESC', 'ID' => 'DESC' ),
+				'tax_query' => array( array( 'taxonomy' => $taxonomy->name, 'terms' => $series->term_id, 'include_children' => false ) ),
+				'meta_query' => $meta,
+			) );
+			foreach ( $posts->posts as $post ) {
+				if ( ! $post instanceof \WP_Post || ! self::is_public_member( $post ) || ! current_user_can( 'read_post', $post->ID ) ) { continue; }
+				$group = self::for_post( (int) $post->ID );
+				if ( $group && $scope === get_term_meta( $group->term_id, '_wptl_scope', true ) ) {
+					$rows[ $group->term_id ] = array( 'id' => $group->term_id, 'label' => $group->name );
+				}
+			}
+		}
+
+		$current = self::editable_group( (int) $request['post'] );
+		if ( $current && $scope === get_term_meta( $current->term_id, '_wptl_scope', true ) ) {
+			$rows[ $current->term_id ] = array( 'id' => $current->term_id, 'label' => $current->name, 'can_rename' => current_user_can( $taxonomy->cap->edit_terms ) );
+		}
+		// Historical aliases are solely for server-side resolution, never suggestions.
+		usort( $rows, static function ( array $left, array $right ): int { return strnatcasecmp( $left['label'], $right['label'] ) ?: ( $left['id'] <=> $right['id'] ); } );
+		$response->set_data( $rows );
+		return $response;
+	}
+
+	public static function can_rename( \WP_REST_Request $request ): bool {
+		$taxonomy = get_taxonomy( Series::claimed_taxonomy() );
+		if ( ! self::can_list() || ! $taxonomy || ! current_user_can( $taxonomy->cap->edit_terms ) ) { return false; }
+		$group = self::editable_group( (int) $request['post'] );
+		return $group && $group->term_id === (int) $request->get_url_params()['id'];
 	}
 
 	public static function rename( \WP_REST_Request $request ) {
-		$group = get_term( (int) $request['id'], self::TAXONOMY );
+		$group = get_term( (int) $request->get_url_params()['id'], self::TAXONOMY );
 		$label = trim( (string) $request['label'] );
 		if ( ! $group instanceof \WP_Term || '' === $label ) { return new \WP_Error( 'wptl_group_invalid', __( 'Choose a group and a nonempty name.', 'irisable-title-layer' ), array( 'status' => 400 ) ); }
 		$series = get_term( (int) get_term_meta( $group->term_id, '_wptl_series', true ), Series::claimed_taxonomy() );
@@ -215,6 +284,6 @@ final class ContentGroups {
 		$result = wp_update_term( $group->term_id, self::TAXONOMY, array( 'name' => $label ) );
 		if ( is_wp_error( $result ) ) { return $result; }
 		update_term_meta( $group->term_id, '_wptl_aliases', array_values( array_unique( array_filter( $aliases, static function ( $value ) { return '' !== (string) $value; } ) ) ) );
-		return array( 'id' => $group->term_id, 'label' => $label );
+		return array( 'id' => $group->term_id, 'label' => $label, 'can_rename' => true );
 	}
 }

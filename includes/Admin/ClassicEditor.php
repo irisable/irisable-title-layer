@@ -125,7 +125,7 @@ final class ClassicEditor {
 		}
 		$manager_url = add_query_arg( $manager_args, $manager_base_url );
 		?>
-		<div class="wptl-classic-editor" data-wptl-classic-editor>
+		<div class="wptl-classic-editor" data-wptl-classic-editor data-wptl-post-id="<?php echo esc_attr( (string) $post->ID ); ?>">
 			<input type="hidden" name="<?php echo esc_attr( self::FIELD_ROOT ); ?>[_present]" value="1">
 			<p>
 				<label for="wptl-classic-subtitle"><strong><?php esc_html_e( 'Subtitle', 'irisable-title-layer' ); ?></strong></label><br>

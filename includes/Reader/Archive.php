@@ -93,6 +93,15 @@ final class Archive {
 		foreach ( $groups as &$group ) { $group['segments'] = $this->contentSegments( $group['posts'] ); }
 		unset( $group );
 		$active_group = $query->get( 'wptl_active_group' );
+		$active_group_label = '';
+		if ( $active_group instanceof \WP_Term ) {
+			foreach ( $posts as $entry ) {
+				if ( $active_group->term_id === $entry['group_id'] ) {
+					$active_group_label = $entry['group_label'];
+					break;
+				}
+			}
+		}
 		$context = array(
 			'valid'          => true,
 			'term'           => $term,
@@ -107,8 +116,8 @@ final class Archive {
 			'mode'           => $mode,
 			'structure'      => $structure,
 			'groups'         => $groups,
-			'active_group'   => $active_group instanceof \WP_Term ? $active_group->name : '',
-			'group_back_url' => $active_group instanceof \WP_Term && $active_season
+			'active_group'   => $active_group_label,
+			'group_back_url' => '' !== $active_group_label && $active_season
 				? Series::public_season_archive_url( $term, $active_season['key'] ) : Series::public_archive_url( $term ),
 			'pagination'     => $this->pagination( $query ),
 			'found_posts'    => max( 0, (int) $query->found_posts ),
@@ -281,7 +290,9 @@ final class Archive {
 
 	/** @return array<string,mixed> */
 	public function postContext( int $post_id, string $mode, string $structure, bool $include_featured_image = false, bool $include_excerpt = false, ?\WP_Term $term = null ): array {
-		$content_group = \WPTitleLayer\Core\ContentGroups::for_post( $post_id, $term );
+		$post = get_post( $post_id );
+		$content_group = $post instanceof \WP_Post && \WPTitleLayer\Core\ContentGroups::is_public_member( $post )
+			? \WPTitleLayer\Core\ContentGroups::for_post( $post_id, $term ) : null;
 		$group_series = $term ?: Series::get_primary_term( $post_id );
 		$subtitle = '';
 		if ( metadata_exists( 'post', $post_id, Schema::META_SUBTITLE ) ) {

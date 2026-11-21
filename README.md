@@ -2,10 +2,10 @@
 
 Formerly **WP Title Layer**. Version **1.0.1** was submitted to WordPress.org on
 November 11, 2026 as `irisable-title-layer`. First-round review feedback arrived
-on November 15 and a second round on November 19. **1.0.3 is the current
+on November 15, with follow-ups on November 19 and 21. **1.0.4 is the current
 review-response candidate**, not an approved directory release. See the
 [submission audit](docs/wordpress-org-submission.md) and the
-[second-round review record](docs/wordpress-org-review-2026-11-19.md).
+[group-permission review record](docs/wordpress-org-review-2026-11-21.md).
 
 The GitHub repository remains `irisable/wp-title-layer` during review. Existing
 data fields, REST endpoints and stored block names remain backward compatible.

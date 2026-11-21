@@ -1,5 +1,6 @@
 <?php
 /** Exercise public groups through WordPress saves, REST, queries and rendering. */
+define( 'WP_DEBUG', true );
 require_once '/wordpress/wp-load.php';
 
 use WPTitleLayer\Core\ContentGroups as Groups;
@@ -16,11 +17,11 @@ function group_check( $ok, $message ) {
 	++$checks;
 	if ( ! $ok ) { $failures[] = $message; }
 }
-function group_post( $series, $season, $label, $position, $status = 'publish' ) {
-	$id = wp_insert_post( array( 'post_title' => 'Group article ' . $position, 'post_status' => $status,
+function group_post( $series, $season, $label, $position, $status = 'publish', array $extra = array() ) {
+	$id = wp_insert_post( array_merge( array( 'post_title' => 'Group article ' . $position, 'post_status' => $status,
 		'meta_input' => array( 'wptl_season_key' => $season, 'wptl_series_group' => $label, 'wptl_sequence_position' => $position ),
 		'tax_input' => array( 'wptl_series' => array( $series->term_id ) ),
-	) );
+	), $extra ) );
 	Groups::flush();
 	\WPTitleLayer\Core\SequenceRuntime::flush();
 	return $id;
@@ -101,6 +102,7 @@ group_check( 0 === count( group_query( get_term( $other['term_id'], 'wptl_series
 
 $server = rest_get_server();
 $rename = new WP_REST_Request( 'POST', '/wp-title-layer/v1/groups/' . $group->term_id );
+$rename->set_param( 'post', $b );
 $rename->set_param( 'label', 'W1 新组名' );
 $response = $server->dispatch( $rename );
 group_check( 200 === $response->get_status(), 'Group rename failed.' );
@@ -222,13 +224,62 @@ group_check( $season_id === (int) get_post_meta( $members[0], '_wptl_group_id', 
 group_check( 'Scoped unit' === get_post_meta( $members[106], 'wptl_series_group', true ), 'Background reconciliation modified canonical group text.' );
 
 $author = wp_insert_user( array( 'user_login' => 'group-author', 'user_pass' => wp_generate_password(), 'role' => 'author' ) );
+$restricted = array();
+foreach ( array( 'draft', 'private', 'pending', 'future', 'protected' ) as $index => $visibility ) {
+	$extra = 'protected' === $visibility ? array( 'post_password' => 'fixture-protected' ) : array();
+	if ( 'future' === $visibility ) { $extra['post_date'] = date( 'Y-m-d H:i:s', time() + DAY_IN_SECONDS ); }
+	$restricted[ $visibility ] = group_post( $series, 's1', 'Restricted unit ' . $visibility, 20 + $index, 'protected' === $visibility ? 'publish' : $visibility, $extra );
+}
+$private_group = Groups::for_post( $restricted['private'] );
+$protected_group = Groups::for_post( $restricted['protected'] );
+$own_draft = group_post( $series, 's1', 'Own draft group', 30, 'draft', array( 'post_author' => $author ) );
+$own_group = Groups::for_post( $own_draft );
 wp_set_current_user( $author );
 $suggestions = new WP_REST_Request( 'GET', '/wp-title-layer/v1/groups' );
 $suggestions->set_param( 'series', $series->term_id );
 $suggestions->set_param( 'season', 's1' );
-group_check( 200 === $server->dispatch( $suggestions )->get_status(), 'Assign-only author could not load group suggestions.' );
+$view = $server->dispatch( $suggestions );
+$labels = wp_list_pluck( $view->get_data(), 'label' );
+group_check( 200 === $view->get_status() && in_array( 'W1 新组名', $labels, true ), 'Assign-only author could not load a public group.' );
+group_check( 'private, no-store' === ( $view->get_headers()['Cache-Control'] ?? '' ), 'User-specific suggestions can be cached publicly.' );
+group_check( ! in_array( 'W1 看见人的软弱', $labels, true ), 'Historical group alias was suggested.' );
+foreach ( $view->get_data() as $row ) { group_check( ! array_key_exists( 'aliases', $row ), 'Group listing disclosed historical aliases.' ); }
+foreach ( $restricted as $visibility => $protected_post ) {
+	$suggestions->set_param( 'post', $protected_post );
+	$labels = wp_list_pluck( $server->dispatch( $suggestions )->get_data(), 'label' );
+	group_check( ! in_array( 'Restricted unit ' . $visibility, $labels, true ), 'Unauthorized post context revealed a restricted group: ' . $visibility );
+}
+$suggestions->set_param( 'post', $own_draft );
+$own_rows = array_column( $server->dispatch( $suggestions )->get_data(), null, 'id' );
+group_check( 'Own draft group' === ( $own_rows[ $own_group->term_id ]['label'] ?? null ) && false === ( $own_rows[ $own_group->term_id ]['can_rename'] ?? null ), 'Author cannot see their editable draft or gained shared rename rights.' );
+$suggestions->set_param( 'season', 's2' );
+group_check( ! in_array( 'Own draft group', wp_list_pluck( $server->dispatch( $suggestions )->get_data(), 'label' ), true ), 'Current draft group leaked outside the saved season.' );
+$suggestions->set_param( 'season', array( 's1' ) );
+group_check( 400 === $server->dispatch( $suggestions )->get_status(), 'Malformed season argument was not rejected.' );
 group_check( 403 === $server->dispatch( $rename )->get_status(), 'Assign-only author could rename a shared group.' );
+( new WP_User( $author ) )->add_cap( get_taxonomy( 'wptl_series' )->cap->edit_terms );
+wp_set_current_user( 0 );
+wp_set_current_user( $author );
+$private_rename = new WP_REST_Request( 'POST', '/wp-title-layer/v1/groups/' . $private_group->term_id );
+$private_rename->set_param( 'label', 'Changed label' );
+$private_rename->set_param( 'post', $restricted['private'] );
+group_check( 403 === $server->dispatch( $private_rename )->get_status(), 'Term capability bypassed the post permission on rename.' );
+$private_rename->set_param( 'post', $own_draft );
+group_check( 403 === $server->dispatch( $private_rename )->get_status(), 'Unrelated editable post authorized another group rename.' );
+wp_set_current_user( 0 );
+$unlocked = new WP_REST_Request( 'GET', '/wp/v2/posts/' . $restricted['protected'] );
+$protected_rest = $server->dispatch( $unlocked );
+group_check( 200 === $protected_rest->get_status() && ! isset( $protected_rest->get_data()['meta']['wptl_series_group'] ), 'Protected article REST output did not retain the public shell without its group.' );
+foreach ( array( $private_group, $protected_group ) as $hidden_group ) {
+	$hidden_query = group_query( $series, $hidden_group->term_id, '1' );
+	group_check( '' === $archive->context( $series, $hidden_query )['active_group'], 'Empty or restricted group archive disclosed the group name.' );
+}
+group_check( '' === $archive->postContext( $restricted['protected'], 'ordered', 'seasoned', false, false, $series )['group_label'], 'Public archive card exposed the protected post group.' );
+group_check( 'W1 新组名' === $archive->context( $series, group_query( $series, $group->term_id, '1' ) )['active_group'], 'A valid public group lost its archive heading.' );
 wp_set_current_user( $admin );
+$editable = new WP_REST_Request( 'GET', '/wp/v2/posts/' . $restricted['protected'] );
+$editable->set_param( 'context', 'edit' );
+group_check( 'Restricted unit protected' === ( $server->dispatch( $editable )->get_data()['meta']['wptl_series_group'] ?? null ), 'Editable protected article lost Publisher readback.' );
 
 $cap_request = new WP_REST_Request( 'GET', '/wp/v2/wptl_series/' . $shape->term_id );
 $cap_response = $server->dispatch( $cap_request );

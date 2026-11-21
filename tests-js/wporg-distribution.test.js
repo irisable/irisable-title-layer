@@ -43,3 +43,13 @@ test( 'Series structure changes queue paginated reindexing outside the save requ
 	assert.match( source, /object_id > %d ORDER BY object_id ASC LIMIT %d/ );
 	assert.match( source, /wp_schedule_single_event/ );
 } );
+
+test( 'Both editors bind group suggestions and renames to an editable post without aliases', () => {
+	const editor = read( 'assets/editor.js' );
+	const classic = read( 'assets/classic-editor.js' );
+	assert.match( editor, /selected\.can_rename/ );
+	assert.match( editor, /post: props\.postId/ );
+	assert.match( classic, /item\.can_rename/ );
+	assert.match( classic, /post: groupPostId/ );
+	assert.doesNotMatch( editor + classic, /\.aliases\b/ );
+} );

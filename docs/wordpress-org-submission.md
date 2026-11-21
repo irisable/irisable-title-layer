@@ -1,8 +1,13 @@
 # WordPress.org submission preparation
 
-Updated: 2026-11-19. Candidate: 1.0.3. Directory account: `irisable`.
+Updated: 2026-11-21. Candidate: 1.0.4. Directory account: `irisable`.
 
-## Current outcome: 1.0.3 update uploaded and second-round reply sent
+## Current outcome: group-suggestion permissions review
+
+The November 21 review of 1.0.3 flagged the visibility of labels and historical
+aliases in the editorial group picker. See the [1.0.4 review record](wordpress-org-review-2026-11-21.md).
+
+## Second review outcome: 1.0.3 update uploaded and reply sent
 
 The second review of 1.0.2 identifies Kadence fallback escaping and synchronous
 content-group reconciliation. The 1.0.3 update was tested, uploaded to the

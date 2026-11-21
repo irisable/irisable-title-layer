@@ -4,7 +4,7 @@ Tags: title, subtitle, series, editorial, gutenberg
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -424,6 +424,11 @@ Official Kadence 1.5.2 templates pass 40 adapter checks. Official Rank Math
 two-post cache isolation and its real taxonomy/sitemap settings.
 
 == Changelog ==
+
+= 1.0.4 =
+* Limit group suggestions to recent public articles and the editable current article. Historical aliases stay server-side.
+* Require edit permission on the current group member as well as Series term permission to rename a group. To rename from an article newly assigned to a group, save that article first.
+* Do not display protected group names on public archives or expose them through unauthorized post REST responses.
 
 = 1.0.3 =
 * Escape all fallback returns from the narrowly scoped Kadence title callback.

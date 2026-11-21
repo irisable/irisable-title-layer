@@ -19,15 +19,16 @@
 		var groupRename = root.querySelector( '[data-wptl-group-rename]' );
 		var groupForm = root.querySelector( '[data-wptl-group-rename-form]' );
 		var groupConfig = window.WPTLGroupEditor || {};
+		var groupPostId = parseInt( root.getAttribute( 'data-wptl-post-id' ), 10 ) || 0;
 		var groupOptions = [], groupScope = '', renameId = 0;
-		function currentGroup() { return groupOptions.find( function ( item ) { return item.label === groupInput.value || ( item.aliases || [] ).indexOf( groupInput.value ) !== -1; } ); }
+		function currentGroup() { return groupOptions.find( function ( item ) { return item.can_rename && item.label === groupInput.value; } ); }
 		function groupActions() { if ( groupRename ) { groupRename.hidden = ! groupConfig.canRename || ! currentGroup(); } }
 		function loadGroups( term, seasonKey ) {
 			if ( ! groupInput || ! window.wp || ! window.wp.apiFetch ) { return; }
 			var nextScope = term + ':' + seasonKey;
 			if ( nextScope === groupScope ) { return; }
 			groupScope = nextScope; groupOptions = []; groupList.textContent = ''; groupActions(); groupForm.hidden = true;
-			window.wp.apiFetch( { path: '/wp-title-layer/v1/groups?series=' + term + '&season=' + encodeURIComponent( seasonKey ) } ).then( function ( items ) {
+			window.wp.apiFetch( { path: '/wp-title-layer/v1/groups?series=' + term + '&season=' + encodeURIComponent( seasonKey ) + '&post=' + groupPostId } ).then( function ( items ) {
 				if ( groupScope !== nextScope ) { return; }
 				groupOptions = items;
 				items.forEach( function ( item ) { var option = document.createElement( 'option' ); option.value = item.label; groupList.appendChild( option ); } );
@@ -45,7 +46,7 @@
 				var button = event.currentTarget, requestScope = groupScope;
 				var label = root.querySelector( '#wptl-classic-group-new' ).value.trim(); if ( ! label ) { return; }
 				button.disabled = true; groupInput.readOnly = true;
-				window.wp.apiFetch( { path: '/wp-title-layer/v1/groups/' + renameId, method: 'POST', data: { label: label } } ).then( function ( result ) {
+				window.wp.apiFetch( { path: '/wp-title-layer/v1/groups/' + renameId, method: 'POST', data: { label: label, post: groupPostId } } ).then( function ( result ) {
 					if ( groupScope !== requestScope ) { return; }
 					groupInput.value = result.label; groupForm.hidden = true; groupScope = ''; update();
 				} ).catch( function ( error ) { if ( groupScope === requestScope ) { groupStatus.textContent = error.message || groupConfig.renameError; } } ).finally( function () { button.disabled = false; groupInput.readOnly = false; } );

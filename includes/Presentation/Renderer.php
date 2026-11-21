@@ -277,7 +277,9 @@ final class Renderer {
 		$sequence_item = $this->sequenceItemDisplay( $position, $sequence, $role );
 		$group = $series_term instanceof \WP_Term ? \WPTitleLayer\Core\ContentGroups::for_post( $post_id, $series_term ) : null;
 		$group_label = $group ? $group->name : '';
-		$group_url = $group ? \WPTitleLayer\Core\ContentGroups::url( $group, $series_term ) : '';
+		$group_post = $group ? get_post( $post_id ) : null;
+		$group_url = $group_post instanceof \WP_Post && \WPTitleLayer\Core\ContentGroups::is_public_member( $group_post )
+			? \WPTitleLayer\Core\ContentGroups::url( $group, $series_term ) : '';
 		$derived_label = $this->sequenceDisplay( $season, $sequence_item, $group_label );
 
 		$kicker_override = metadata_exists( 'post', $post_id, Schema::kickerOverrideMeta() )

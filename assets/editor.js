@@ -40,14 +40,14 @@
 			if ( saving ) { return; }
 			var active = true;
 			setGroups( [] ); setError( '' ); setRename( null );
-			wp.apiFetch( { path: '/wp-title-layer/v1/groups?series=' + props.series + '&season=' + encodeURIComponent( props.season ) } ).then( function ( result ) {
+			wp.apiFetch( { path: '/wp-title-layer/v1/groups?series=' + props.series + '&season=' + encodeURIComponent( props.season ) + '&post=' + ( props.postId || 0 ) } ).then( function ( result ) {
 				if ( active ) { setGroups( result ); }
 			} ).catch( function () {
 				if ( active ) { setError( __( 'Group suggestions could not be loaded. You can still enter a name.', 'irisable-title-layer' ) ); }
 			} );
 			return function () { active = false; };
-		}, [ props.series, props.season, saving ] );
-		var selected = groups.find( function ( group ) { return group.label === props.value || ( group.aliases || [] ).indexOf( props.value ) !== -1; } );
+		}, [ props.series, props.season, props.postId, saving ] );
+		var selected = groups.find( function ( group ) { return group.label === props.value; } );
 		var listId = 'wptl-content-groups-' + props.series + '-' + props.season;
 		return el( 'div', { className: 'wptl-content-group-control' },
 			el( wp.components.TextControl, {
@@ -58,12 +58,12 @@
 			} ),
 			el( 'datalist', { id: listId }, groups.map( function ( group ) { return el( 'option', { key: group.id, value: group.label } ); } ) ),
 			error ? el( 'p', { role: 'status' }, error ) : null,
-			selected && config.canRenameGroups && rename === null ? el( wp.components.Button, { variant: 'link', onClick: function () { setRename( { id: selected.id, label: selected.label } ); } }, __( 'Rename this group', 'irisable-title-layer' ) ) : null,
+			selected && selected.can_rename && config.canRenameGroups && rename === null ? el( wp.components.Button, { variant: 'link', onClick: function () { setRename( { id: selected.id, label: selected.label } ); } }, __( 'Rename this group', 'irisable-title-layer' ) ) : null,
 			rename !== null ? el( 'div', null,
 				el( wp.components.TextControl, { label: __( 'New group name', 'irisable-title-layer' ), value: rename.label, onChange: function ( value ) { setRename( { id: rename.id, label: value } ); }, help: __( 'Renames this group for all its articles. Existing group links stay valid.', 'irisable-title-layer' ) } ),
 				el( wp.components.Button, { variant: 'secondary', disabled: busy || ! rename.label.trim(), onClick: function () {
 					setBusy( true ); setError( '' );
-					wp.apiFetch( { path: '/wp-title-layer/v1/groups/' + rename.id, method: 'POST', data: { label: rename.label } } ).then( function ( result ) {
+					wp.apiFetch( { path: '/wp-title-layer/v1/groups/' + rename.id, method: 'POST', data: { label: rename.label, post: props.postId } } ).then( function ( result ) {
 						if ( ! alive.current ) { return; }
 						setGroups( groups.map( function ( group ) { return group.id === result.id ? result : group; } ) );
 						props.onChange( result.label ); setRename( null );
@@ -395,6 +395,7 @@
 			controls.push( el( ContentGroupControl, {
 				key: 'content-group-' + editor.selectedTermId + '-' + ( editor.meta[ schema.seasonKey ] || '' ) + '-' + contentScope,
 				series: editor.selectedTermId,
+				postId: editor.postId,
 				season: structure === 'seasoned' && ( mainArticle || contentScope !== 'series' ) ? ( editor.meta[ schema.seasonKey ] || '' ) : '',
 				value: editor.meta[ schema.seriesGroup ] || '',
 				onChange: function ( value ) { setMeta( schema.seriesGroup, value ); }
