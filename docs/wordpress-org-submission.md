@@ -2,10 +2,12 @@
 
 Updated: 2026-11-21. Candidate: 1.0.4. Directory account: `irisable`.
 
-## Current outcome: group-suggestion permissions review
+## Current outcome: 1.0.4 uploaded and third-round reply sent
 
 The November 21 review of 1.0.3 flagged the visibility of labels and historical
-aliases in the editorial group picker. See the [1.0.4 review record](wordpress-org-review-2026-11-21.md).
+aliases in the editorial group picker. The verified 1.0.4 package was uploaded
+to the existing submission and the original review email was answered on
+November 21. Approval remains pending. See the [1.0.4 review record](wordpress-org-review-2026-11-21.md).
 
 ## Second review outcome: 1.0.3 update uploaded and reply sent
 
