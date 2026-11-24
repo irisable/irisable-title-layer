@@ -4,13 +4,13 @@
   "private": true,
   "description": "Structured subtitles, series, and context-aware title templates for WordPress.",
   "license": "GPL-2.0-or-later",
-  "homepage": "https://github.com/irisable/wp-title-layer#readme",
+  "homepage": "https://github.com/irisable/irisable-title-layer#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/irisable/wp-title-layer.git"
+    "url": "git+https://github.com/irisable/irisable-title-layer.git"
   },
   "bugs": {
-    "url": "https://github.com/irisable/wp-title-layer/issues"
+    "url": "https://github.com/irisable/irisable-title-layer/issues"
   },
   "scripts": {
     "check:js": "node --check assets/editor.js && node --check assets/migration.js && node --check assets/series-admin.js && node --check assets/classic-editor.js && node --check assets/settings.js && node --check assets/sequence-manager.js && node --check bin/build-editor-translations.js",

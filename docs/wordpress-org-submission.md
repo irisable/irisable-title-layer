@@ -1,13 +1,24 @@
 # WordPress.org submission preparation
 
-Updated: 2026-11-21. Candidate: 1.0.4. Directory account: `irisable`.
+Updated: 2026-11-24. Approved version: 1.0.4. Directory account: `irisable`.
 
-## Current outcome: 1.0.4 uploaded and third-round reply sent
+## Current outcome: approved; first directory release is being prepared
+
+The approval email was received on November 24, 2026 at 01:44 Asia/Shanghai.
+The plugin directory assigned [irisable-title-layer](https://wordpress.org/plugins/irisable-title-layer/)
+with SVN at `https://plugins.svn.wordpress.org/irisable-title-layer/`.
+Publish the exact reviewed 1.0.4 files from Git commit `0ac385b`, SHA-256
+`42763b52f603dc744ca5fb6d3cd3cda47bebda5f04693756e2203a6c80c566e5` for the
+original ZIP. The GitHub repository was renamed to `irisable/irisable-title-layer`
+after approval. The approved artifact is unchanged and its original GitHub
+links redirect to the same repository. No production site update is implied.
+
+## Third review outcome: 1.0.4 uploaded and reply sent
 
 The November 21 review of 1.0.3 flagged the visibility of labels and historical
 aliases in the editorial group picker. The verified 1.0.4 package was uploaded
 to the existing submission and the original review email was answered on
-November 21. Approval remains pending. See the [1.0.4 review record](wordpress-org-review-2026-11-21.md).
+November 21. See the [1.0.4 review record](wordpress-org-review-2026-11-21.md).
 
 ## Second review outcome: 1.0.3 update uploaded and reply sent
 
@@ -50,12 +61,12 @@ This was NOT manual approval or a live directory release. The review email has
 now arrived; respond within that submission, not as a new plugin submission.
 No production redeployment, GitHub release replacement or Obsidian reload.
 
-## Owner-approved rename
+## Initial submission under the approved name
 
 After the first upload was rejected, the owner approved **Irisable Title Layer**
 and a new submission. The intended directory slug, package root and translation
-domain are now `irisable-title-layer`. The source repository stays at its
-existing GitHub URL. Database keys, taxonomy names, PHP namespace, REST routes,
+domain are `irisable-title-layer`. The source repository kept its original
+GitHub URL until directory approval. Database keys, taxonomy names, PHP namespace, REST routes,
 stored block names and editor registration IDs remain unchanged.
 
 The old copy must be deactivated before activating the directory copy. The new
@@ -70,9 +81,9 @@ existing legacy-root builder remains available for controlled updates in the
 old folder. Run `bin/test-release-package.sh irisable-title-layer-1.0.1.zip` and
 the standalone `tests/distribution-smoke.php` with the new directory mount.
 
-This is a submission candidate, not an assertion of approval or availability in
-the plugin directory. Published GitHub 1.0.0 remains unchanged. Production is
-not redeployed as part of this preparation.
+Submitting 1.0.1 did not itself make the plugin available in the directory.
+The historical GitHub 1.0.0 release is preserved. Production was not redeployed
+as part of this preparation.
 
 ## Historical first attempt (superseded by the accepted renamed submission)
 

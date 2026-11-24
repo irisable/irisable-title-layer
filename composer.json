@@ -3,10 +3,10 @@
   "description": "Structured subtitles, series, and context-aware title templates for WordPress.",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
-  "homepage": "https://github.com/irisable/wp-title-layer",
+  "homepage": "https://github.com/irisable/irisable-title-layer",
   "support": {
-    "issues": "https://github.com/irisable/wp-title-layer/issues",
-    "source": "https://github.com/irisable/wp-title-layer"
+    "issues": "https://github.com/irisable/irisable-title-layer/issues",
+    "source": "https://github.com/irisable/irisable-title-layer"
   },
   "require": {
     "php": ">=7.4"

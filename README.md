@@ -1,19 +1,13 @@
 # Irisable Title Layer
 
-Formerly **WP Title Layer**. Version **1.0.1** was submitted to WordPress.org on
-November 11, 2026 as `irisable-title-layer`. First-round review feedback arrived
-on November 15, with follow-ups on November 19 and 21. **1.0.4 is the current
-review-response candidate**, not an approved directory release. See the
-[submission audit](docs/wordpress-org-submission.md) and the
-[group-permission review record](docs/wordpress-org-review-2026-11-21.md).
+Formerly **WP Title Layer**. [WordPress.org](https://wordpress.org/plugins/irisable-title-layer/)
+approved Irisable Title Layer on November 24, 2026. **1.0.4** is the first
+approved package; see the [release and directory status](docs/wordpress-org-submission.md).
+Source lives at [irisable/irisable-title-layer](https://github.com/irisable/irisable-title-layer).
+The previous GitHub address redirects. Existing data fields, REST endpoints and
+stored block names remain backward compatible.
 
-The GitHub repository remains `irisable/wp-title-layer` during review. Existing
-data fields, REST endpoints and stored block names remain backward compatible.
-Published stable release: **1.0.0**. This promotes the production-tested release
-candidates, including the Kadence 1.6.0 compatibility fix, without a new data
-migration. Historical RC checklists below remain the detailed feature records.
-
-[![CI](https://github.com/irisable/wp-title-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/irisable/wp-title-layer/actions/workflows/ci.yml)
+[![CI](https://github.com/irisable/irisable-title-layer/actions/workflows/ci.yml/badge.svg)](https://github.com/irisable/irisable-title-layer/actions/workflows/ci.yml)
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL--2.0--or--later-blue.svg)](LICENSE)
 
 Irisable Title Layer keeps the native WordPress `post_title` as the canonical primary
@@ -73,8 +67,8 @@ cannot certify unrelated fields owned by themes or other plugins.
 
 ## Install and start
 
-1. Install the ZIP or copy its plugin directory to `/wp-content/plugins/`.
-   The 1.0.1 directory package uses `irisable-title-layer`; deactivate the old
+1. Install the release ZIP or copy its plugin directory to `/wp-content/plugins/`.
+   The 1.0.4 package uses `irisable-title-layer`; deactivate the old
    `wp-title-layer` copy before activating it. Existing data and settings are
    retained. The historical 1.0.0 package still uses its original directory.
 2. Activate Irisable Title Layer.
