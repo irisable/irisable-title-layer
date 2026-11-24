@@ -1,8 +1,9 @@
 # Irisable Title Layer
 
-Formerly **WP Title Layer**. [WordPress.org](https://wordpress.org/plugins/irisable-title-layer/)
-approved Irisable Title Layer on November 24, 2026. **1.0.4** is the first
-approved package; see the [release and directory status](docs/wordpress-org-submission.md).
+Formerly **WP Title Layer**. Version **1.0.4** is the first release on
+[WordPress.org](https://wordpress.org/plugins/irisable-title-layer/) and is also
+available on [GitHub Releases](https://github.com/irisable/irisable-title-layer/releases/tag/v1.0.4).
+See the [release record](docs/wordpress-org-submission.md).
 Source lives at [irisable/irisable-title-layer](https://github.com/irisable/irisable-title-layer).
 The previous GitHub address redirects. Existing data fields, REST endpoints and
 stored block names remain backward compatible.
@@ -67,10 +68,10 @@ cannot certify unrelated fields owned by themes or other plugins.
 
 ## Install and start
 
-1. Install the release ZIP or copy its plugin directory to `/wp-content/plugins/`.
-   The 1.0.4 package uses `irisable-title-layer`; deactivate the old
-   `wp-title-layer` copy before activating it. Existing data and settings are
-   retained. The historical 1.0.0 package still uses its original directory.
+1. Install [Irisable Title Layer from WordPress.org](https://wordpress.org/plugins/irisable-title-layer/)
+   or upload the installable ZIP from GitHub Releases. If upgrading a legacy
+   `wp-title-layer` installation, deactivate the old copy before activating the
+   new `irisable-title-layer` copy. Existing data and settings are retained.
 2. Activate Irisable Title Layer.
 3. If the site used Secondary Title or an ACF field named `subtitle`, open
    **Tools → Title Layer Migration** and run the read-only scan first.

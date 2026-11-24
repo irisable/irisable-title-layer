@@ -2,16 +2,21 @@
 
 Updated: 2026-11-24. Approved version: 1.0.4. Directory account: `irisable`.
 
-## Current outcome: approved; first directory release is being prepared
+## Current outcome: 1.0.4 published and verified
 
 The approval email was received on November 24, 2026 at 01:44 Asia/Shanghai.
-The plugin directory assigned [irisable-title-layer](https://wordpress.org/plugins/irisable-title-layer/)
-with SVN at `https://plugins.svn.wordpress.org/irisable-title-layer/`.
-Publish the exact reviewed 1.0.4 files from Git commit `0ac385b`, SHA-256
-`42763b52f603dc744ca5fb6d3cd3cda47bebda5f04693756e2203a6c80c566e5` for the
-original ZIP. The GitHub repository was renamed to `irisable/irisable-title-layer`
-after approval. The approved artifact is unchanged and its original GitHub
-links redirect to the same repository. No production site update is implied.
+The exact reviewed 1.0.4 files from Git commit `0ac385b` were published in
+WordPress.org SVN revision `3819529` (`trunk` and `tags/1.0.4`). The
+[public directory listing](https://wordpress.org/plugins/irisable-title-layer/)
+and its installable ZIP were verified. The unpacked download matched the
+reviewed package file for file.
+
+The GitHub repository was renamed to `irisable/irisable-title-layer` after
+approval; the original address redirects. The
+[GitHub 1.0.4 release](https://github.com/irisable/irisable-title-layer/releases/tag/v1.0.4)
+contains the original reviewed ZIP; its SHA-256 is
+`42763b52f603dc744ca5fb6d3cd3cda47bebda5f04693756e2203a6c80c566e5`.
+No production site update was performed.
 
 ## Third review outcome: 1.0.4 uploaded and reply sent
 
