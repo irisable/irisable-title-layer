@@ -19,12 +19,22 @@ test( 'Kadence versions and template guards fail closed', { skip: spawnSync( 'ph
 			mkdirSync( path.dirname( path.join( root, file ) ), { recursive: true } );
 			writeFileSync( path.join( root, file ), source );
 		}
-		for ( const version of [ '1.5.0', '1.5.2', '1.6.0' ] ) assert.equal( probe( version ), true, version );
-		for ( const version of [ '', '1.4.9', '1.6.0-beta.1', '1.6.1', '1.7.0', '2.0.0' ] ) assert.equal( probe( version ), false, version );
-		assert.equal( probe( '1.6.0', root ), false, 'Child title overrides must remain unsupported' );
+		for ( const version of [ '1.5.0', '1.5.2', '1.6.0', '1.6.0.1', '1.6.1', '1.6.10.2' ] ) assert.equal( probe( version ), true, version );
+		for ( const version of [ '', '1.4.9', '1.5.2.1', '1.6', '1.6.0-beta.1', '1.6.0.1-rc.1', '1.6.0.1.2', '1.6.0+dev', '1.7.0', '2.0.0' ] ) assert.equal( probe( version ), false, version );
+		assert.equal( probe( '1.6.0.1', root ), false, 'Child title overrides must remain unsupported' );
+		const [ before, heading, after ] = source.split( '\n' );
+		const brokenSlots = {
+			'Changed hook': source.replace( 'kadence_single_after_entry_title', 'changed_hook' ),
+			'Changed heading': source.replace( 'entry-title', 'other-heading' ),
+			'Reordered hooks': [ after, heading, before ].join( '\n' ),
+			'Repeated heading': [ before, heading, heading, after ].join( '\n' ),
+			'Unverified call inside the slot': [ before, heading, 'another_call();', after ].join( '\n' ),
+		};
 		for ( const file of files ) {
-			writeFileSync( path.join( root, file ), source.replace( 'kadence_single_after_entry_title', 'changed_hook' ) );
-			assert.equal( probe( '1.6.0' ), false, 'Changed title hooks must fail closed' );
+			for ( const [ label, broken ] of Object.entries( brokenSlots ) ) {
+				writeFileSync( path.join( root, file ), broken );
+				assert.equal( probe( '1.6.0.1' ), false, `${ label } must fail closed in ${ file }` );
+			}
 			writeFileSync( path.join( root, file ), source );
 		}
 	} finally {

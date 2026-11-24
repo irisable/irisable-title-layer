@@ -246,6 +246,10 @@ final class SettingsPage {
 		$support = ThemeTitleIntegration::support();
 		echo '<p>' . esc_html__( 'Theme-title takeover replaces a verified title slot instead of adding a second title inside the article body. Manual placement remains the universal fallback.', 'irisable-title-layer' ) . '</p>';
 		echo '<p><strong>' . esc_html__( 'Detected integration:', 'irisable-title-layer' ) . '</strong> ' . esc_html( $support['label'] ) . '</p>';
+		$stored = get_option( Schema::settingsOption(), array() );
+		if ( empty( $support['supported'] ) && ThemeTitleIntegration::MODE_REPLACE === ( $stored['presentation']['display_mode'] ?? '' ) ) {
+			echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'Theme-title takeover is saved, but the current theme or its title templates could not be verified. Manual placement is in effect; your saved setting has not changed.', 'irisable-title-layer' ) . '</p></div>';
+		}
 	}
 
 	public static function renderDisplayModeField(): void {

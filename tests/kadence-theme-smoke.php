@@ -22,6 +22,8 @@ $assert = static function ( bool $condition, string $message ) use ( &$failures,
 $assert( 'kadence' === get_template(), 'Kadence was not the active parent theme.' );
 $assert( function_exists( 'Kadence\\kadence' ), 'Kadence theme functions did not load.' );
 
+$assert( 'kadence' === \WPTitleLayer\Presentation\ThemeTitleIntegration::support()['adapter'], 'The official Kadence title slots were not recognized.' );
+
 $post_id = wp_insert_post(
 	array(
 		'post_title'   => 'Kadence Primary Title',
@@ -113,6 +115,21 @@ foreach ( array( 'template-parts/content/entry_title', 'template-parts/title/tit
 	$assert( false === strpos( $preface_html, 'Arrival season' ), 'Whole-Series preface incorrectly displayed a season.' );
 }
 $assert( $settings_before === get_option( 'wptl_settings' ), 'Title rendering rewrote stored display settings.' );
+
+// Unsupported slots fall back without rewriting the user's selection, and the
+// settings screen explains the difference between saved and effective modes.
+$force_manual = static function (): array {
+	return array( 'supported' => false, 'adapter' => 'manual', 'label' => 'Manual theme integration required' );
+};
+add_filter( 'wptl_theme_title_support', $force_manual );
+$assert( 'manual' === \WPTitleLayer\Presentation\SettingsPage::presentationSettings()['display_mode'], 'Unverified title slots did not fall back to Manual.' );
+ob_start();
+\WPTitleLayer\Presentation\SettingsPage::renderOutputSectionIntro();
+$fallback_notice = (string) ob_get_clean();
+$assert( false !== strpos( $fallback_notice, 'Manual placement is in effect; your saved setting has not changed.' ), 'The settings screen did not explain the temporary fallback.' );
+$assert( $settings_before === get_option( 'wptl_settings' ), 'The temporary fallback rewrote stored display settings.' );
+remove_filter( 'wptl_theme_title_support', $force_manual );
+
 delete_term_meta( $term_id, \WPTitleLayer\Core\Schema::TERM_META_BOOK_STRUCTURE_VERSION );
 delete_post_meta( $post_id, 'wptl_series_role' );
 delete_post_meta( $post_id, 'wptl_series_scope' );

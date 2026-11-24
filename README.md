@@ -86,11 +86,11 @@ cannot certify unrelated fields owned by themes or other plugins.
    **Settings → Irisable Title Layer**. When the detected theme supports it, select
    **Replace the theme post title** so the layer occupies the original title
    slot instead of the article body.
-7. Test one ordinary article and one Series article. Block themes and the
-   verified official Kadence 1.5.x and 1.6.0 title templates have title-slot
-   integrations. A Kadence child theme that overrides those title templates,
-   and other classic themes, retain their title and use manual block/theme-API
-   placement.
+7. Test one ordinary article and one Series article. Block themes and stable
+   Kadence 1.5.x and 1.6.x releases have title-slot integrations. Kadence must
+   retain both verified title templates and their heading/hook order, including
+   on 1.6.x hotfixes such as 1.6.0.1. Unverified templates and child-theme
+   overrides retain the theme title and use manual block/theme-API placement.
 8. Enable Reader features separately if desired. They remain off by default.
 9. Open **Irisable Title Layer → Landing & Channels** for one Series at a time before
    changing canonical, robots, sitemap, or duplicate Category entry points.

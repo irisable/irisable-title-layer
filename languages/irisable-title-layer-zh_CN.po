@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Irisable Title Layer 1.0.4\n"
+"Project-Id-Version: Irisable Title Layer 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/irisable/wp-title-layer/issues\n"
 "POT-Creation-Date: 2026-08-29 12:36+0800\n"
 "PO-Revision-Date: 2026-09-11 16:00+0800\n"
@@ -3702,6 +3702,10 @@ msgstr "接管主题标题"
 #: includes/Admin/ControlCenter.php:499
 msgid "Theme title takeover selected"
 msgstr "已选择接管主题标题"
+
+#: includes/Presentation/SettingsPage.php:251
+msgid "Theme-title takeover is saved, but the current theme or its title templates could not be verified. Manual placement is in effect; your saved setting has not changed."
+msgstr "已保存接管主题标题的设置，但未能验证当前主题或标题模板。现暂用手动放置，已保存的设置未更改。"
 
 #: includes/Presentation/SettingsPage.php:247
 msgid ""

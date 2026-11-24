@@ -4,7 +4,7 @@ Tags: title, subtitle, series, editorial, gutenberg
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
@@ -125,10 +125,11 @@ review is left unchanged and reported as a conflict or left for a new scan.
 
 Open Settings > Irisable Title Layer and choose Replace the theme post title when the
 screen reports a verified integration. Block themes use their singular Post
-Title block; official Kadence 1.5.x and 1.6.0 title templates use their exact singular
-title hooks. The original heading level is retained and the body is not used
-as the title slot. A Kadence child theme that overrides the relevant title
-templates falls back to Manual mode.
+Title block. Stable Kadence 1.5.x and 1.6.x releases use their exact singular
+title hooks only when both title templates pass verification. This includes
+four-part 1.6.x hotfix versions such as 1.6.0.1. The original heading level is
+retained and the body is not used as the title slot. Unverified title templates,
+including a Kadence child theme's overrides, fall back to Manual mode.
 
 Unknown classic themes stay in Manual mode. Insert the dynamic Title Layer
 block, use `[wp_title_layer]`, or integrate the theme API in the desired title
@@ -424,6 +425,10 @@ Official Kadence 1.5.2 templates pass 40 adapter checks. Official Rank Math
 two-post cache isolation and its real taxonomy/sitemap settings.
 
 == Changelog ==
+
+= 1.0.5 =
+* Allow stable Kadence 1.6.x patch and hotfix versions, including 1.6.0.1, when both title templates retain their verified heading and hook sequence.
+* Explain temporary Manual fallback in title settings without overwriting the saved takeover choice.
 
 = 1.0.4 =
 * Limit group suggestions to recent public articles and the editable current article. Historical aliases stay server-side.

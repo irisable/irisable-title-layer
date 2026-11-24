@@ -461,9 +461,9 @@ final class ThemeTitleIntegration {
 
 	private static function isVerifiedKadenceVersion(): bool {
 		$version = defined( 'KADENCE_VERSION' ) ? (string) KADENCE_VERSION : '';
-		// Keep the previously verified branch; admit only the newly tested release.
-		// Future releases still require verification, and templates are checked separately.
-		return '1.6.0' === $version || ( 1 === preg_match( '/^1\.5\.\d+$/D', $version ) );
+		// Allow stable patch updates on supported branches, including hotfixes
+		// such as 1.6.0.1. Both actual title slots must still pass verification.
+		return 1 === preg_match( '/^1\.(?:5\.[0-9]+|6\.[0-9]+(?:\.[0-9]+)?)$/D', $version );
 	}
 
 	private static function hasVerifiedKadenceTemplates(): bool {
@@ -480,19 +480,32 @@ final class ThemeTitleIntegration {
 		if ( '' === $base ) {
 			return false;
 		}
+		$markers = array(
+			"do_action( 'kadence_single_before_entry_title' );",
+			"the_title( '<h1 class=\"entry-title\">', '</h1>' );",
+			"do_action( 'kadence_single_after_entry_title' );",
+		);
 		foreach ( array( 'template-parts/content/entry_title.php', 'template-parts/title/title.php' ) as $relative ) {
 			$file = $base . $relative;
 			if ( ! is_readable( $file ) ) {
 				return false;
 			}
 			$source = file_get_contents( $file );
-			if (
-				! is_string( $source )
-				|| false === strpos( $source, "do_action( 'kadence_single_before_entry_title' );" )
-				|| false === strpos( $source, "the_title( '<h1 class=\"entry-title\">', '</h1>' );" )
-				|| false === strpos( $source, "do_action( 'kadence_single_after_entry_title' );" )
-			) {
+			if ( ! is_string( $source ) ) {
 				return false;
+			}
+			// The title filter is armed only for the single call between these
+			// hooks. Reject reordered, repeated, or interrupted slots.
+			$previous_end = null;
+			foreach ( $markers as $marker ) {
+				$start = strpos( $source, $marker );
+				if ( false === $start || 1 !== substr_count( $source, $marker ) ) {
+					return false;
+				}
+				if ( null !== $previous_end && ( $start < $previous_end || '' !== trim( substr( $source, $previous_end, $start - $previous_end ) ) ) ) {
+					return false;
+				}
+				$previous_end = $start + strlen( $marker );
 			}
 		}
 

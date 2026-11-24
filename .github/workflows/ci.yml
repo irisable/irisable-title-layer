@@ -47,8 +47,10 @@ jobs:
       - run: npm run test:wp
       - name: Verify official Kadence title and archive templates
         run: |
-          curl --fail --location --output "$RUNNER_TEMP/kadence-1.6.0.zip" https://downloads.wordpress.org/theme/kadence.1.6.0.zip
-          ./bin/test-kadence.sh "$RUNNER_TEMP/kadence-1.6.0.zip"
+          for version in 1.5.2 1.6.0 1.6.0.1; do
+            curl --fail --location --output "$RUNNER_TEMP/kadence-$version.zip" "https://downloads.wordpress.org/theme/kadence.$version.zip"
+            ./bin/test-kadence.sh "$RUNNER_TEMP/kadence-$version.zip"
+          done
       - name: Build candidate package
         run: bash bin/build-wporg-release.sh
       - name: Test extracted candidate package

@@ -6,7 +6,7 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Irisable Title Layer 1.0.4\n"
+"Project-Id-Version: Irisable Title Layer 1.0.5\n"
 "Report-Msgid-Bugs-To: https://github.com/irisable/wp-title-layer/issues\n"
 "POT-Creation-Date: 2026-09-11 16:00+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -3598,6 +3598,10 @@ msgstr ""
 
 #: includes/Admin/ControlCenter.php:499
 msgid "Theme title takeover selected"
+msgstr ""
+
+#: includes/Presentation/SettingsPage.php:251
+msgid "Theme-title takeover is saved, but the current theme or its title templates could not be verified. Manual placement is in effect; your saved setting has not changed."
 msgstr ""
 
 #: includes/Presentation/SettingsPage.php:247
